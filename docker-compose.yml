@@ -9,7 +9,7 @@ services:
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_DB: ${DB_NAME}
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - ./.docker/data/postgres:/var/lib/postgresql/data
     networks:
       - sakny-network
     healthcheck:
@@ -25,7 +25,7 @@ services:
       - "${REDIS_PORT}:${REDIS_PORT}"
     command: redis-server --appendonly yes
     volumes:
-      - redis_data:/data
+      - ./.docker/data/redis:/data
     networks:
       - sakny-network
     healthcheck:
@@ -45,7 +45,7 @@ services:
       MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY}
     command: server /data --console-address ":9001"
     volumes:
-      - minio_data:/data
+      - ./.docker/data/minio:/data
     networks:
       - sakny-network
 
@@ -78,7 +78,8 @@ networks:
   sakny-network:
     driver: bridge
 
-volumes:
-  postgres_data:
-  redis_data:
-  minio_data:
+# Handled by local folders in ./.docker/data
+# volumes:
+#   postgres_data:
+#   redis_data:
+#   minio_data:
