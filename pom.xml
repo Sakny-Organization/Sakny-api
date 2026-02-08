@@ -8,8 +8,7 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>3.2.1</version>
-		<relativePath/>
+		<version>3.5.4</version>
 	</parent>
 
 	<groupId>com.sakny</groupId>
@@ -21,9 +20,8 @@
 
 	<properties>
 		<java.version>17</java.version>
-		<spring-cloud.version>2023.0.0</spring-cloud.version>
-		<jwt.version>0.12.3</jwt.version>
-		<lombok.version>1.18.30</lombok.version>
+		<jwt.version>0.12.6</jwt.version>
+		<lombok.version>1.18.34</lombok.version>
 	</properties>
 
 	<!-- Define all modules -->
@@ -31,26 +29,13 @@
 		<module>common</module>
 		<module>auth</module>
 		<module>sakny-server</module>
+		<module>user</module>
 		<!-- Add other modules as you create them -->
-		<!-- <module>user-service</module> -->
-		<!-- <module>matching-service</module> -->
-		<!-- <module>messaging-service</module> -->
-		<!-- <module>listing-service</module> -->
-		<!-- <module>api-gateway</module> -->
-		<!-- <module>eureka-server</module> -->
 	</modules>
 
 	<!-- Dependency Management - versions defined here, inherited by all modules -->
 	<dependencyManagement>
 		<dependencies>
-			<!-- Spring Cloud -->
-			<dependency>
-				<groupId>org.springframework.cloud</groupId>
-				<artifactId>spring-cloud-dependencies</artifactId>
-				<version>${spring-cloud.version}</version>
-				<type>pom</type>
-				<scope>import</scope>
-			</dependency>
 
 			<!-- JWT -->
 			<dependency>

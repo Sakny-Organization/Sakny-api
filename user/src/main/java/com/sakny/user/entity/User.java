@@ -1,5 +1,6 @@
-package com.sakny.common.model;
+package com.sakny.user.entity;
 
+import com.sakny.common.model.Role;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -29,7 +30,6 @@ public class User implements UserDetails {
     @Column(unique = true, nullable = false)
     private String phone;
 
-    @Column(nullable = true) // Nullable for Google OAuth users who don't have passwords
     private String password;
 
     @Column(nullable = false)

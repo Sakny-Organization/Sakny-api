@@ -1,6 +1,8 @@
-package com.sakny.common.repository;
+package com.sakny.user.repository;
 
-import com.sakny.common.model.User;
+
+
+import com.sakny.user.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;
