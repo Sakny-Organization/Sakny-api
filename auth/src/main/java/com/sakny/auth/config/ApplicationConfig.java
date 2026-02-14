@@ -1,6 +1,6 @@
 package com.sakny.auth.config;
 
-import com.sakny.common.repository.UserRepository;
+import com.sakny.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

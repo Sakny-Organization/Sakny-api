@@ -26,10 +26,11 @@ spring:
     enabled: true
     drop-first: false
 
-  redis:
-    host: ${REDIS_HOST:localhost}
-    port: ${REDIS_PORT:6379}
-    timeout: 2000
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      connect-timeout: 2000
 
 server:
   port: ${SERVER_PORT:8081}
@@ -54,3 +55,10 @@ logging:
     com.sakny: DEBUG
     org.springframework.security: DEBUG
     org.hibernate.SQL: DEBUG
+
+# MinIO Configuration
+minio:
+  url: ${MINIO_URL:http://localhost:9000}
+  access-key: ${MINIO_ACCESS_KEY:minioadmin}
+  secret-key: ${MINIO_SECRET_KEY:minioadmin123}
+  bucket-name: ${MINIO_BUCKET_NAME:sakny-profiles}

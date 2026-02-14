@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="003-create-user-profiles-table" author="Mohamed Mekhemer">
+        <createTable tableName="user_profiles">
+            <column name="id" type="BIGSERIAL" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="user_id" type="BIGINT">
+                <constraints nullable="false" unique="true"
+                             foreignKeyName="fk_user_profiles_user"
+                             references="users(id)"/>
+            </column>
+            <column name="age" type="INTEGER">
+                <constraints nullable="false"/>
+            </column>
+            <column name="gender" type="VARCHAR(10)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="occupation" type="VARCHAR(50)"/>
+            <column name="university_or_school" type="VARCHAR(255)"/>
+            <column name="company_name" type="VARCHAR(255)"/>
+            <column name="current_governorate_id" type="INTEGER"/>
+            <column name="current_city_id" type="INTEGER"/>
+            <column name="bio" type="VARCHAR(500)"/>
+            <column name="instagram" type="VARCHAR(100)"/>
+            <column name="linkedin" type="VARCHAR(255)"/>
+            <column name="personality_traits" type="TEXT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="smoking" type="VARCHAR(20)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="pets" type="VARCHAR(20)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="sleep_schedule" type="VARCHAR(20)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="cleanliness" type="INTEGER" defaultValueNumeric="3">
+                <constraints nullable="false"/>
+                <constraints nullable="false"/>
+            </column>
+            <column name="budget_min" type="INTEGER">
+                <constraints nullable="false"/>
+            </column>
+            <column name="budget_max" type="INTEGER">
+                <constraints nullable="false"/>
+            </column>
+            <column name="roommate_gender" type="VARCHAR(10)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="roommate_type" type="VARCHAR(30)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="pref_smoking" type="VARCHAR(30)"/>
+            <column name="pref_pets" type="VARCHAR(30)"/>
+            <column name="pref_sleep_schedule" type="VARCHAR(20)"/>
+            <column name="pref_cleanliness" type="VARCHAR(20)"/>
+            <column name="additional_notes" type="VARCHAR(300)"/>
+            <column name="is_complete" type="BOOLEAN" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createIndex indexName="idx_user_profiles_user_id" tableName="user_profiles">
+            <column name="user_id"/>
+        </createIndex>
+
+        <setTableRemarks tableName="user_profiles" remarks="User profile data for roommate matching"/>
+    </changeSet>
+
+</databaseChangeLog>
