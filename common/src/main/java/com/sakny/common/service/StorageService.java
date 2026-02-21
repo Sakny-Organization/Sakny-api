@@ -17,6 +17,15 @@ public interface StorageService {
     String uploadProfilePhoto(MultipartFile file, Long userId);
 
     /**
+     * Upload a listing image.
+     *
+     * @param file      the image file to upload
+     * @param listingId the listing's ID
+     * @return the public URL of the uploaded file
+     */
+    String uploadListingImage(MultipartFile file, Long listingId);
+
+    /**
      * Delete a file from storage.
      *
      * @param objectKey the object key (path) in the bucket

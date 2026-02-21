@@ -29,6 +29,11 @@
         </dependency>
         <dependency>
             <groupId>com.sakny</groupId>
+            <artifactId>listing</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.sakny</groupId>
             <artifactId>common</artifactId>
         </dependency>
 

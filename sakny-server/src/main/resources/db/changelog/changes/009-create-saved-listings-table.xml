@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="009-create-saved-listings-table" author="Sakny Team">
+        <createTable tableName="saved_listings">
+            <column name="id" type="BIGSERIAL" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="user_id" type="BIGINT">
+                <constraints nullable="false"
+                             foreignKeyName="fk_saved_listings_user"
+                             references="users(id)"
+                             deleteCascade="true"/>
+            </column>
+            <column name="listing_id" type="BIGINT">
+                <constraints nullable="false"
+                             foreignKeyName="fk_saved_listings_listing"
+                             references="listings(id)"
+                             deleteCascade="true"/>
+            </column>
+            <column name="saved_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <!-- Unique constraint: user can only save a listing once -->
+        <addUniqueConstraint tableName="saved_listings"
+                             columnNames="user_id, listing_id"
+                             constraintName="uk_saved_listings_user_listing"/>
+
+        <createIndex indexName="idx_saved_listings_user_id" tableName="saved_listings">
+            <column name="user_id"/>
+        </createIndex>
+
+        <createIndex indexName="idx_saved_listings_listing_id" tableName="saved_listings">
+            <column name="listing_id"/>
+        </createIndex>
+
+        <setTableRemarks tableName="saved_listings" remarks="User bookmarked/saved listings"/>
+    </changeSet>
+
+</databaseChangeLog>
+

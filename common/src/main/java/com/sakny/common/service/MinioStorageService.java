@@ -27,6 +27,7 @@ public class MinioStorageService implements StorageService {
             "image/webp"
     );
     private static final String PROFILE_PHOTOS_PREFIX = "profile-photos/";
+    private static final String LISTING_IMAGES_PREFIX = "listing-images/";
 
     private final MinioClient minioClient;
     private final MinioProperties minioProperties;
@@ -53,6 +54,32 @@ public class MinioStorageService implements StorageService {
 
         } catch (Exception e) {
             log.error("Failed to upload profile photo for user {}: {}", userId, e.getMessage(), e);
+            throw new BusinessException(StorageErrorCode.UPLOAD_FAILED);
+        }
+    }
+
+    @Override
+    public String uploadListingImage(MultipartFile file, Long listingId) {
+        validateFile(file);
+
+        String objectKey = generateListingImageObjectKey(file, listingId);
+
+        try (InputStream inputStream = file.getInputStream()) {
+            minioClient.putObject(
+                    PutObjectArgs.builder()
+                            .bucket(minioProperties.getBucketName())
+                            .object(objectKey)
+                            .stream(inputStream, file.getSize(), -1)
+                            .contentType(file.getContentType())
+                            .build()
+            );
+
+            String fileUrl = getFileUrl(objectKey);
+            log.info("Successfully uploaded listing image for listing {}: {}", listingId, fileUrl);
+            return fileUrl;
+
+        } catch (Exception e) {
+            log.error("Failed to upload listing image for listing {}: {}", listingId, e.getMessage(), e);
             throw new BusinessException(StorageErrorCode.UPLOAD_FAILED);
         }
     }
@@ -129,6 +156,29 @@ public class MinioStorageService implements StorageService {
         return String.format("%suser-%d/%s%s",
                 PROFILE_PHOTOS_PREFIX,
                 userId,
+                UUID.randomUUID().toString(),
+                extension);
+    }
+
+    private String generateListingImageObjectKey(MultipartFile file, Long listingId) {
+        String originalFilename = file.getOriginalFilename();
+        String extension = "";
+        if (originalFilename != null && originalFilename.contains(".")) {
+            extension = originalFilename.substring(originalFilename.lastIndexOf("."));
+        } else {
+            // Fallback based on content type
+            extension = switch (file.getContentType()) {
+                case "image/jpeg" -> ".jpg";
+                case "image/png" -> ".png";
+                case "image/webp" -> ".webp";
+                default -> ".jpg";
+            };
+        }
+
+        // Generate unique filename: listing-images/listing-{listingId}/{uuid}.{ext}
+        return String.format("%slisting-%d/%s%s",
+                LISTING_IMAGES_PREFIX,
+                listingId,
                 UUID.randomUUID().toString(),
                 extension);
     }
