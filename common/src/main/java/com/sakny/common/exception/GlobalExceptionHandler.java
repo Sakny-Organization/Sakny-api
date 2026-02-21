@@ -29,8 +29,20 @@ public class GlobalExceptionHandler {
             String errorMessage = error.getDefaultMessage();
             errors.put(fieldName, errorMessage);
         });
+
+        // Build a descriptive message with all validation errors
+        String errorMessage = errors.entrySet().stream()
+                .map(entry -> entry.getKey() + ": " + entry.getValue())
+                .reduce((a, b) -> a + "; " + b)
+                .orElse("Validation failed");
+
         return ResponseEntity.badRequest()
-                .body(ApiResponse.error("Validation failed"));
+                .body(ApiResponse.<Map<String, String>>builder()
+                        .success(false)
+                        .message(errorMessage)
+                        .data(errors)
+                        .timestamp(java.time.LocalDateTime.now())
+                        .build());
     }
 
     @ExceptionHandler(Exception.class)

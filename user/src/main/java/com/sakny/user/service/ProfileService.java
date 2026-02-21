@@ -26,7 +26,7 @@ public class ProfileService {
     private final StorageService storageService;
 
     @Transactional
-    public ProfileResponse createProfile(Long userId, ProfileRequest request) {
+    public ProfileResponse createProfile(Long userId, ProfileRequest request, MultipartFile profileImage) {
         log.info("Creating profile for user ID: {}", userId);
 
         if (profileRepository.existsByUserId(userId)) {
@@ -51,6 +51,7 @@ public class ProfileService {
         }
 
         UserProfile saved = profileRepository.save(profile);
+        uploadProfileImage(user.getId(), profileImage); // Handle photo upload after saving to get profile ID for storage path
         log.info("Profile created successfully for user ID: {}", userId);
 
         return profileMapper.toResponse(saved);
@@ -116,7 +117,7 @@ public class ProfileService {
     }
 
     @Transactional
-    public ProfileResponse uploadProfilePhoto(Long userId, MultipartFile file) {
+    public ProfileResponse updateProfileImage(Long userId, MultipartFile file) {
         log.info("Uploading profile photo for user ID: {}", userId);
 
         UserProfile profile = profileRepository.findByUserId(userId)
@@ -145,8 +146,23 @@ public class ProfileService {
         return profileMapper.toResponse(saved);
     }
 
+    // upload profile image when creating a new profile for a user who doesn't have a profile yet(e.g., after registration)
+    public void uploadProfileImage(Long userId, MultipartFile profileImage){
+        UserProfile profile = profileRepository.findByUserId(userId)
+                .orElseThrow(() -> new BusinessException(ProfileErrorCode.PROFILE_NOT_FOUND));
+
+        if (profileImage != null && !profileImage.isEmpty()) {
+            // Upload new photo
+            String photoUrl = storageService.uploadProfilePhoto(profileImage, userId);
+            profile.setProfilePhotoUrl(photoUrl);
+
+            UserProfile saved = profileRepository.save(profile);
+            log.info("Profile photo uploaded successfully for user ID: {}", userId);
+        }
+    }
+
     @Transactional
-    public ProfileResponse deleteProfilePhoto(Long userId) {
+    public ProfileResponse deleteProfileImage(Long userId) {
         log.info("Deleting profile photo for user ID: {}", userId);
 
         UserProfile profile = profileRepository.findByUserId(userId)

@@ -43,7 +43,6 @@
             </column>
             <column name="cleanliness" type="INTEGER" defaultValueNumeric="3">
                 <constraints nullable="false"/>
-                <constraints nullable="false"/>
             </column>
             <column name="budget_min" type="INTEGER">
                 <constraints nullable="false"/>

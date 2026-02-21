@@ -28,12 +28,13 @@ public class ProfileController {
      * Create a new profile for the authenticated user.
      * Called after completing the 6-step profile wizard.
      */
-    @PostMapping
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ApiResponse<ProfileResponse>> createProfile(
             @AuthenticationPrincipal User user,
-            @Valid @RequestBody ProfileRequest request) {
+            @Valid @RequestPart("request") ProfileRequest request,
+            @RequestPart(value = "profileImage", required = false) MultipartFile profileImage) {
         log.info("Create profile request for user: {}", user.getEmail());
-        ProfileResponse response = profileService.createProfile(user.getId(), request);
+        ProfileResponse response = profileService.createProfile(user.getId(), request, profileImage);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.success("Profile created successfully", response));
     }
@@ -77,12 +78,12 @@ public class ProfileController {
      * Upload or update profile photo.
      * Accepts JPEG, PNG, and WebP images up to 5MB.
      */
-    @PostMapping(value = "/photo", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<ApiResponse<ProfileResponse>> uploadProfilePhoto(
+    @PutMapping(value = "/photo", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<ApiResponse<ProfileResponse>> updateProfileImage(
             @AuthenticationPrincipal User user,
-            @RequestParam("file") MultipartFile file) {
+            @RequestParam("profileImage") MultipartFile profileImage) {
         log.info("Upload profile photo request for user: {}", user.getEmail());
-        ProfileResponse response = profileService.uploadProfilePhoto(user.getId(), file);
+        ProfileResponse response = profileService.updateProfileImage(user.getId(), profileImage);
         return ResponseEntity.ok(ApiResponse.success("Profile photo uploaded successfully", response));
     }
 
@@ -90,10 +91,10 @@ public class ProfileController {
      * Delete the current profile photo.
      */
     @DeleteMapping("/photo")
-    public ResponseEntity<ApiResponse<ProfileResponse>> deleteProfilePhoto(
+    public ResponseEntity<ApiResponse<ProfileResponse>> deleteProfileImage(
             @AuthenticationPrincipal User user) {
         log.info("Delete profile photo request for user: {}", user.getEmail());
-        ProfileResponse response = profileService.deleteProfilePhoto(user.getId());
+        ProfileResponse response = profileService.deleteProfileImage(user.getId());
         return ResponseEntity.ok(ApiResponse.success("Profile photo deleted successfully", response));
     }
 }
