@@ -8,5 +8,6 @@
     <!-- Include all changelogs -->
     <include file="db/changelog/changes/001-create-users-table.xml"/>
     <include file="db/changelog/changes/002-update-user-columns.xml"/>
+    <include file="db/changelog/changes/003-add-user-location-columns.xml"/>
 
 </databaseChangeLog>

@@ -39,6 +39,18 @@ public class User implements UserDetails {
     @Column(nullable = false, length = 20)
     private Role role;
 
+    @Column(nullable = true)
+    private Double latitude;
+
+    @Column(nullable = true)
+    private Double longitude;
+
+    @Column(nullable = true)
+    private String address;
+
+    @Column(name = "last_location_update")
+    private java.time.LocalDateTime lastLocationUpdate;
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of(new SimpleGrantedAuthority(role.name()));
