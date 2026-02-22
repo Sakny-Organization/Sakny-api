@@ -3,6 +3,7 @@ FROM maven:3.9.6-eclipse-temurin-17 AS build
 WORKDIR /app
 COPY pom.xml .
 COPY common/pom.xml common/
+COPY user/pom.xml user/
 COPY auth/pom.xml auth/
 COPY sakny-server/pom.xml sakny-server/
 
@@ -11,6 +12,7 @@ RUN mvn dependency:go-offline -B
 
 # Copy source code
 COPY common/src common/src
+COPY user/src user/src
 COPY auth/src auth/src
 COPY sakny-server/src sakny-server/src
 

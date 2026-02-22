@@ -8,5 +8,9 @@
     <!-- Include all changelogs -->
     <include file="db/changelog/changes/001-create-users-table.xml"/>
     <include file="db/changelog/changes/002-update-user-columns.xml"/>
+    <include file="db/changelog/changes/003-create-user-profiles-table.xml"/>
+    <include file="db/changelog/changes/004-create-preferred-areas-table.xml"/>
+    <include file="db/changelog/changes/005-create-locations-tables.xml"/>
+    <include file="db/changelog/changes/006-add-profile-photo.xml"/>
 
 </databaseChangeLog>

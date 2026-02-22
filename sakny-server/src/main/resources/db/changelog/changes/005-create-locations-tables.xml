@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="005-create-locations-tables" author="Mohamed Mekhemer">
+        <!-- Governorates reference table -->
+        <createTable tableName="governorates">
+            <column name="id" type="INTEGER">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name_en" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="name_ar" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <!-- Cities reference table -->
+        <createTable tableName="cities">
+            <column name="id" type="INTEGER">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="governorate_id" type="INTEGER">
+                <constraints nullable="false"
+                             foreignKeyName="fk_cities_governorate"
+                             references="governorates(id)"/>
+            </column>
+            <column name="name_en" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="name_ar" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createIndex indexName="idx_cities_governorate_id" tableName="cities">
+            <column name="governorate_id"/>
+        </createIndex>
+
+        <setTableRemarks tableName="governorates" remarks="Egyptian governorates reference data"/>
+        <setTableRemarks tableName="cities" remarks="Egyptian cities reference data"/>
+    </changeSet>
+
+    <changeSet id="005-seed-locations-data" author="Mohamed Mekhemer">
+        <sqlFile path="db/changelog/changes/005-seed-locations.sql"
+                 encoding="UTF-8"
+                 splitStatements="true"
+                 stripComments="true"/>
+    </changeSet>
+
+    <changeSet id="005-add-fk-profile-locations" author="Mohamed Mekhemer">
+        <!-- Add foreign keys from user_profiles to locations -->
+        <addForeignKeyConstraint baseTableName="user_profiles"
+                                 baseColumnNames="current_governorate_id"
+                                 constraintName="fk_profile_current_governorate"
+                                 referencedTableName="governorates"
+                                 referencedColumnNames="id"/>
+        <addForeignKeyConstraint baseTableName="user_profiles"
+                                 baseColumnNames="current_city_id"
+                                 constraintName="fk_profile_current_city"
+                                 referencedTableName="cities"
+                                 referencedColumnNames="id"/>
+
+        <!-- Add foreign keys from preferred_areas to locations -->
+        <addForeignKeyConstraint baseTableName="preferred_areas"
+                                 baseColumnNames="governorate_id"
+                                 constraintName="fk_preferred_area_governorate"
+                                 referencedTableName="governorates"
+                                 referencedColumnNames="id"/>
+        <addForeignKeyConstraint baseTableName="preferred_areas"
+                                 baseColumnNames="city_id"
+                                 constraintName="fk_preferred_area_city"
+                                 referencedTableName="cities"
+                                 referencedColumnNames="id"/>
+    </changeSet>
+
+</databaseChangeLog>
