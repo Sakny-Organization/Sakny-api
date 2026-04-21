@@ -115,6 +115,10 @@ public class UserProfile {
     @Column(name = "additional_notes", length = 300)
     private String additionalNotes;
 
+    @Column(name = "hide_contact_info", nullable = false)
+    @Builder.Default
+    private Boolean hideContactInfo = false;
+
     @Column(name = "is_complete", nullable = false)
     @Builder.Default
     private Boolean isComplete = false;

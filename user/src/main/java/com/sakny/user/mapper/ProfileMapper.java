@@ -52,6 +52,7 @@ public interface ProfileMapper {
     @Mapping(target = "prefSleepSchedule", source = "request.prefSleepSchedule")
     @Mapping(target = "prefCleanliness", source = "request.prefCleanliness")
     @Mapping(target = "additionalNotes", source = "request.additionalNotes")
+    @Mapping(target = "hideContactInfo", source = "request.hideContactInfo", defaultValue = "false")
     UserProfile toEntity(ProfileRequest request, User user,
                          Governorate currentGovernorate, City currentCity);
 
@@ -69,6 +70,7 @@ public interface ProfileMapper {
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
     @Mapping(target = "preferredAreas", ignore = true) // handled manually due to bidirectional relation
+    @Mapping(target = "hideContactInfo", source = "request.hideContactInfo")
     void partialUpdateEntity(@MappingTarget UserProfile profile, ProfileUpdateRequest request,
                              Governorate currentGovernorate, City currentCity);
 
@@ -89,6 +91,7 @@ public interface ProfileMapper {
     @Mapping(target = "prefPets", expression = "java(mapEnum(profile.getPrefPets()))")
     @Mapping(target = "prefSleepSchedule", expression = "java(mapEnum(profile.getPrefSleepSchedule()))")
     @Mapping(target = "prefCleanliness", expression = "java(mapEnum(profile.getPrefCleanliness()))")
+    @Mapping(target = "hideContactInfo", source = "hideContactInfo")
     ProfileResponse toResponse(UserProfile profile);
 
     // ===== Custom mapping methods =====

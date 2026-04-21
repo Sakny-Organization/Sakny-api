@@ -96,4 +96,6 @@ public class ProfileRequest {
 
     @Size(max = 300, message = "Additional notes must be at most 300 characters")
     private String additionalNotes;
+
+    private Boolean hideContactInfo;
 }

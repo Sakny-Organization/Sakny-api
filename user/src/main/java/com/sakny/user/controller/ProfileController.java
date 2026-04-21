@@ -1,9 +1,6 @@
 package com.sakny.user.controller;
 
-import com.sakny.common.dto.ApiResponse;
-import com.sakny.common.dto.ProfileRequest;
-import com.sakny.common.dto.ProfileResponse;
-import com.sakny.common.dto.ProfileUpdateRequest;
+import com.sakny.common.dto.*;
 import com.sakny.user.entity.User;
 import com.sakny.user.service.ProfileService;
 import jakarta.validation.Valid;
@@ -96,5 +93,16 @@ public class ProfileController {
         log.info("Delete profile photo request for user: {}", user.getEmail());
         ProfileResponse response = profileService.deleteProfileImage(user.getId());
         return ResponseEntity.ok(ApiResponse.success("Profile photo deleted successfully", response));
+    }
+
+    /**
+     * Get the authenticated user's own contact info.
+     */
+    @GetMapping("/contact")
+    public ResponseEntity<ApiResponse<ContactInfoResponse>> getMyContactInfo(
+            @AuthenticationPrincipal User user) {
+        log.debug("Get own contact info request for user: {}", user.getEmail());
+        ContactInfoResponse response = profileService.getContactInfo(user.getId());
+        return ResponseEntity.ok(ApiResponse.success(response));
     }
 }

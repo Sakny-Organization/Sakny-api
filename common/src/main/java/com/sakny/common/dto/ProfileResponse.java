@@ -1,4 +1,3 @@
-
 package com.sakny.common.dto;
 
 import lombok.AllArgsConstructor;
@@ -43,6 +42,7 @@ public class ProfileResponse {
     private String prefSleepSchedule;
     private String prefCleanliness;
     private String additionalNotes;
+    private Boolean hideContactInfo;
     private Boolean isComplete;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

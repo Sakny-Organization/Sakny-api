@@ -64,6 +64,17 @@ public class ProfileService {
         UserProfile profile = profileRepository.findByUserId(userId)
                 .orElseThrow(() -> new BusinessException(ProfileErrorCode.PROFILE_NOT_FOUND));
 
+        User user = profile.getUser();
+
+        // Update User core fields if provided
+        if (request.getName() != null && !request.getName().isBlank()) {
+            user.setName(request.getName());
+        }
+        if (request.getPhone() != null && !request.getPhone().isBlank()) {
+            user.setPhone(request.getPhone());
+        }
+        userRepository.save(user);
+
         // Validate budget range if both are provided or one is being updated
         validateBudgetRangeForUpdate(request, profile);
 
@@ -179,6 +190,21 @@ public class ProfileService {
         }
 
         return profileMapper.toResponse(profile);
+    }
+
+    @Transactional(readOnly = true)
+    public ContactInfoResponse getContactInfo(Long currentUserId) {
+        log.debug("Fetching contact info for user ID: {}", currentUserId);
+
+        UserProfile profile = profileRepository.findByUserId(currentUserId)
+                .orElseThrow(() -> new BusinessException(ProfileErrorCode.PROFILE_NOT_FOUND));
+
+        User user = profile.getUser();
+            return ContactInfoResponse.builder()
+                    .email(user.getEmail())
+                    .phone(user.getPhone())
+                    .isHidden(profile.getHideContactInfo())
+                    .build();
     }
 
     // ===== Validation =====

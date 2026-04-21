@@ -89,5 +89,10 @@ public class ProfileUpdateRequest {
 
     @Size(max = 300, message = "Additional notes must be at most 300 characters")
     private String additionalNotes;
-}
 
+    private String name;
+
+    private String phone;
+
+    private Boolean hideContactInfo;
+}
