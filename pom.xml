@@ -31,6 +31,7 @@
 		<module>auth</module>
 		<module>sakny-server</module>
 		<module>user</module>
+		<module>property</module>
 		<!-- Add other modules as you create them -->
 	</modules>
 
