@@ -13,5 +13,6 @@
     <include file="db/changelog/changes/005-create-locations-tables.xml"/>
     <include file="db/changelog/changes/006-add-profile-photo.xml"/>
     <include file="db/changelog/changes/007-create-properties-tables.xml"/>
+    <include file="db/changelog/changes/008-create-messaging-tables.xml"/>
 
 </databaseChangeLog>

@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(./mvnw compile *)",
+      "Bash(mvn compile *)",
+      "Bash(xargs ls *)",
+      "Bash(find *)",
+      "Bash(grep -E \"\\\\.xml$|\\\\.properties$\")",
+      "Bash(xargs grep *)"
+    ]
+  }
+}

@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="007-create-amenities-table" author="abdallah">
+        <createTable tableName="amenities">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name_en" type="VARCHAR(100)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="name_ar" type="VARCHAR(100)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="icon" type="VARCHAR(255)"/>
+        </createTable>
+
+        <insert tableName="amenities">
+            <column name="name_en" value="Wifi"/>
+            <column name="name_ar" value="واي فاي"/>
+        </insert>
+        <insert tableName="amenities">
+            <column name="name_en" value="Air Conditioning"/>
+            <column name="name_ar" value="تكييف"/>
+        </insert>
+        <insert tableName="amenities">
+            <column name="name_en" value="Elevator"/>
+            <column name="name_ar" value="مصعد"/>
+        </insert>
+        <insert tableName="amenities">
+            <column name="name_en" value="Kitchen"/>
+            <column name="name_ar" value="مطبخ"/>
+        </insert>
+        <insert tableName="amenities">
+            <column name="name_en" value="Washing Machine"/>
+            <column name="name_ar" value="غسالة"/>
+        </insert>
+    </changeSet>
+
+    <changeSet id="007-create-properties-table" author="abdallah">
+        <createTable tableName="properties">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="owner_id" type="BIGINT">
+                <constraints nullable="false"
+                             foreignKeyName="fk_property_owner"
+                             references="users(id)"/>
+            </column>
+            <column name="title" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="description" type="TEXT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="price" type="DECIMAL(19,2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="property_type" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="governorate_id" type="INTEGER">
+                <constraints nullable="false"
+                             foreignKeyName="fk_property_governorate"
+                             references="governorates(id)"/>
+            </column>
+            <column name="city_id" type="INTEGER">
+                <constraints nullable="false"
+                             foreignKeyName="fk_property_city"
+                             references="cities(id)"/>
+            </column>
+            <column name="address" type="VARCHAR(255)"/>
+            <column name="latitude" type="DECIMAL(10,8)"/>
+            <column name="longitude" type="DECIMAL(11,8)"/>
+            <column name="rooms_count" type="INTEGER"/>
+            <column name="bathrooms_count" type="INTEGER"/>
+            <column name="floor_number" type="INTEGER"/>
+            <column name="is_fully_furnished" type="BOOLEAN" defaultValue="false"/>
+            <column name="available_from" type="DATE"/>
+            <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="007-create-property-amenities-table" author="abdallah">
+        <createTable tableName="property_amenities">
+            <column name="property_id" type="BIGINT">
+                <constraints nullable="false"
+                             foreignKeyName="fk_pa_property"
+                             references="properties(id)"/>
+            </column>
+            <column name="amenity_id" type="BIGINT">
+                <constraints nullable="false"
+                             foreignKeyName="fk_pa_amenity"
+                             references="amenities(id)"/>
+            </column>
+        </createTable>
+        <addPrimaryKey tableName="property_amenities" columnNames="property_id, amenity_id"/>
+    </changeSet>
+
+    <changeSet id="007-create-property-images-table" author="abdallah">
+        <createTable tableName="property_images">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="property_id" type="BIGINT">
+                <constraints nullable="false"
+                             foreignKeyName="fk_pi_property"
+                             references="properties(id)"/>
+            </column>
+            <column name="image_url" type="VARCHAR(500)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="is_primary" type="BOOLEAN" defaultValue="false"/>
+            <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="007-create-reservations-table" author="abdallah">
+        <createTable tableName="reservations">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="property_id" type="BIGINT">
+                <constraints nullable="false"
+                             foreignKeyName="fk_res_property"
+                             references="properties(id)"/>
+            </column>
+            <column name="user_id" type="BIGINT">
+                <constraints nullable="false"
+                             foreignKeyName="fk_res_user"
+                             references="users(id)"/>
+            </column>
+            <column name="start_date" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="end_date" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="total_price" type="DECIMAL(19,2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="status" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="note" type="TEXT"/>
+            <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP"/>
+        </createTable>
+    </changeSet>
+
+</databaseChangeLog>

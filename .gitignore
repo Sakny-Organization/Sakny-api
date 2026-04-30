@@ -36,7 +36,7 @@ build/
 # Environment files
 .env
 *.env
-!.env.example
+.env.example
 
 # Maven
 pom.xml.tag
@@ -61,7 +61,7 @@ Thumbs.db
 # Logs
 logs/
 *.log
-
+*/.docker
 # Spring Boot
 application-local.yml
 /.docker/data/minio/.minio.sys/buckets/.bloomcycle.bin/xl.meta
@@ -833,7 +833,7 @@ application-local.yml
 /.docker/data/postgres/base/5/3164
 /.docker/data/postgres/base/5/3256
 /.docker/data/postgres/base/5/3257
-/.docker/data/postgres/base/5/3258
+*/.docker/data/postgres
 /.docker/data/postgres/base/5/3350
 /.docker/data/postgres/base/5/3351
 /.docker/data/postgres/base/5/3379
