@@ -2,9 +2,9 @@ name: Sakny API CI/CD
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "googlemap" ]
   pull_request:
-    branches: [ "main" ]
+    branches: [ "googlemap" ]
 
 env:
   REGISTRY: ghcr.io
