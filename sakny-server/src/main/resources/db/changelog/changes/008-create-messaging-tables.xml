@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <!-- ================================================================ -->
+    <!-- Changeset 1: Create conversations table                          -->
+    <!-- ================================================================ -->
+    <changeSet id="001-create-conversations-table" author="sakny-dev">
+        <createTable tableName="conversations">
+
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" primaryKeyName="pk_conversations" nullable="false"/>
+            </column>
+
+            <!--
+                participant_one_id is ALWAYS the user with the lower numeric ID.
+                This enforces a canonical ordering so the UNIQUE constraint below
+                prevents duplicate conversation rows between the same two users.
+            -->
+            <column name="participant_one_id" type="BIGINT">
+                <constraints nullable="false"
+                             foreignKeyName="fk_conv_participant_one"
+                             references="users(id)"
+                             deleteCascade="false"/>
+            </column>
+
+            <column name="participant_two_id" type="BIGINT">
+                <constraints nullable="false"
+                             foreignKeyName="fk_conv_participant_two"
+                             references="users(id)"
+                             deleteCascade="false"/>
+            </column>
+
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="NOW()">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="updated_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="NOW()">
+                <constraints nullable="false"/>
+            </column>
+
+        </createTable>
+
+        <!-- Prevent duplicate conversations between the same pair of users -->
+        <addUniqueConstraint
+            tableName="conversations"
+            columnNames="participant_one_id, participant_two_id"
+            constraintName="uq_conversation_participants"/>
+
+        <!-- Prevent a user from starting a conversation with themselves -->
+        <sql>
+            ALTER TABLE conversations
+            ADD CONSTRAINT chk_conv_no_self_chat
+            CHECK (participant_one_id &lt;&gt; participant_two_id);
+        </sql>
+
+        <!-- Enforce the canonical ordering invariant at the DB level -->
+        <sql>
+            ALTER TABLE conversations
+            ADD CONSTRAINT chk_conv_ordered_participants
+            CHECK (participant_one_id &lt; participant_two_id);
+        </sql>
+
+        <createIndex tableName="conversations" indexName="idx_conversations_participant_one">
+            <column name="participant_one_id"/>
+        </createIndex>
+
+        <createIndex tableName="conversations" indexName="idx_conversations_participant_two">
+            <column name="participant_two_id"/>
+        </createIndex>
+
+    </changeSet>
+
+    <!-- ================================================================ -->
+    <!-- Changeset 2: Create messages table                               -->
+    <!-- ================================================================ -->
+    <changeSet id="002-create-messages-table" author="sakny-dev">
+        <createTable tableName="messages">
+
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" primaryKeyName="pk_messages" nullable="false"/>
+            </column>
+
+            <column name="conversation_id" type="BIGINT">
+                <constraints nullable="false"
+                             foreignKeyName="fk_msg_conversation"
+                             references="conversations(id)"
+                             deleteCascade="true"/>
+            </column>
+
+            <column name="sender_id" type="BIGINT">
+                <constraints nullable="false"
+                             foreignKeyName="fk_msg_sender"
+                             references="users(id)"
+                             deleteCascade="false"/>
+            </column>
+
+            <column name="receiver_id" type="BIGINT">
+                <constraints nullable="false"
+                             foreignKeyName="fk_msg_receiver"
+                             references="users(id)"
+                             deleteCascade="false"/>
+            </column>
+
+            <column name="content" type="TEXT">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="is_read" type="BOOLEAN" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="sent_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="NOW()">
+                <constraints nullable="false"/>
+            </column>
+
+        </createTable>
+
+        <!-- Indexes for common query patterns -->
+        <createIndex tableName="messages" indexName="idx_messages_conversation_id">
+            <column name="conversation_id"/>
+        </createIndex>
+
+        <createIndex tableName="messages" indexName="idx_messages_sender_id">
+            <column name="sender_id"/>
+        </createIndex>
+
+        <createIndex tableName="messages" indexName="idx_messages_receiver_id">
+            <column name="receiver_id"/>
+        </createIndex>
+
+        <!-- Partial index to quickly count / fetch unread messages per receiver -->
+        <sql>
+            CREATE INDEX idx_messages_unread_receiver
+            ON messages (receiver_id, conversation_id)
+            WHERE is_read = false;
+        </sql>
+
+    </changeSet>
+
+</databaseChangeLog>

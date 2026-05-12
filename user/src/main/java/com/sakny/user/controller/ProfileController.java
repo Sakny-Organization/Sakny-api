@@ -6,6 +6,12 @@ import com.sakny.common.dto.ProfileResponse;
 import com.sakny.common.dto.ProfileUpdateRequest;
 import com.sakny.user.entity.User;
 import com.sakny.user.service.ProfileService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,14 +26,16 @@ import org.springframework.web.multipart.MultipartFile;
 @RequestMapping("/v1/profile")
 @RequiredArgsConstructor
 @Slf4j
+@Tag(name = "User Profiles", description = "Endpoints for managing user profiles, including wizard steps and photo uploads")
 public class ProfileController {
 
     private final ProfileService profileService;
 
-    /**
-     * Create a new profile for the authenticated user.
-     * Called after completing the 6-step profile wizard.
-     */
+    @Operation(
+            summary = "Create a new profile",
+            description = "Creates a new profile for the authenticated user. This should be called after completing the profile wizard."
+    )
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "Profile created successfully")
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ApiResponse<ProfileResponse>> createProfile(
             @AuthenticationPrincipal User user,
@@ -39,9 +47,7 @@ public class ProfileController {
                 .body(ApiResponse.success("Profile created successfully", response));
     }
 
-    /**
-     * Get the authenticated user's own profile.
-     */
+    @Operation(summary = "Get my profile", description = "Retrieves the profile information of the currently authenticated user.")
     @GetMapping
     public ResponseEntity<ApiResponse<ProfileResponse>> getMyProfile(
             @AuthenticationPrincipal User user) {
@@ -50,10 +56,7 @@ public class ProfileController {
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
-    /**
-     * Partial update of the authenticated user's profile.
-     * Only provided fields will be updated.
-     */
+    @Operation(summary = "Update profile", description = "Performs a partial update of the authenticated user's profile.")
     @PutMapping
     public ResponseEntity<ApiResponse<ProfileResponse>> updateProfile(
             @AuthenticationPrincipal User user,
@@ -63,21 +66,16 @@ public class ProfileController {
         return ResponseEntity.ok(ApiResponse.success("Profile updated successfully", response));
     }
 
-    /**
-     * View another user's profile (for match viewing).
-     */
+    @Operation(summary = "Get profile by ID", description = "View another user's profile by their user ID.")
     @GetMapping("/{userId}")
     public ResponseEntity<ApiResponse<ProfileResponse>> getProfileByUserId(
-            @PathVariable Long userId) {
+            @Parameter(description = "ID of the user whose profile to retrieve") @PathVariable Long userId) {
         log.debug("Get profile request for user ID: {}", userId);
         ProfileResponse response = profileService.getProfileByUserId(userId);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
-    /**
-     * Upload or update profile photo.
-     * Accepts JPEG, PNG, and WebP images up to 5MB.
-     */
+    @Operation(summary = "Update profile photo", description = "Upload or update the user's profile photo. Supports JPEG, PNG, and WebP up to 5MB.")
     @PutMapping(value = "/photo", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ApiResponse<ProfileResponse>> updateProfileImage(
             @AuthenticationPrincipal User user,
@@ -87,9 +85,7 @@ public class ProfileController {
         return ResponseEntity.ok(ApiResponse.success("Profile photo uploaded successfully", response));
     }
 
-    /**
-     * Delete the current profile photo.
-     */
+    @Operation(summary = "Delete profile photo", description = "Removes the user's current profile photo.")
     @DeleteMapping("/photo")
     public ResponseEntity<ApiResponse<ProfileResponse>> deleteProfileImage(
             @AuthenticationPrincipal User user) {

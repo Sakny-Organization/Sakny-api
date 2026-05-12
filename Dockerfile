@@ -6,6 +6,8 @@ COPY common/pom.xml common/
 COPY user/pom.xml user/
 COPY auth/pom.xml auth/
 COPY sakny-server/pom.xml sakny-server/
+COPY property/pom.xml property/
+COPY message/pom.xml message/
 
 # Download dependencies
 RUN mvn dependency:go-offline -B
@@ -15,6 +17,8 @@ COPY common/src common/src
 COPY user/src user/src
 COPY auth/src auth/src
 COPY sakny-server/src sakny-server/src
+COPY property/src property/src
+COPY message/src message/src
 
 # Build the application
 RUN mvn clean package -DskipTests

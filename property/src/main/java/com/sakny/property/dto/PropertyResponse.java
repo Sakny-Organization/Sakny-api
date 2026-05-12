@@ -1,0 +1,39 @@
+package com.sakny.property.dto;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Set;
+
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class PropertyResponse {
+    private Long id;
+    private Long ownerId;
+    private String ownerName;
+    private String title;
+    private String description;
+    private BigDecimal price;
+    private String propertyType;
+    private String governorate;
+    private String city;
+    private String address;
+    private BigDecimal latitude;
+    private BigDecimal longitude;
+    private Integer roomsCount;
+    private Integer bathroomsCount;
+    private Integer floorNumber;
+    private Boolean isFullyFurnished;
+    private LocalDate availableFrom;
+    private Set<AmenityResponse> amenities;
+    private List<PropertyImageResponse> images;
+    private LocalDateTime createdAt;
+}

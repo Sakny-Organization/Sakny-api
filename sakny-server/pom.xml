@@ -29,7 +29,17 @@
         </dependency>
         <dependency>
             <groupId>com.sakny</groupId>
+            <artifactId>property</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.sakny</groupId>
             <artifactId>common</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.sakny</groupId>
+            <artifactId>message</artifactId>
+            <version>${project.version}</version>
         </dependency>
 
         <!-- Database & Migrations -->
