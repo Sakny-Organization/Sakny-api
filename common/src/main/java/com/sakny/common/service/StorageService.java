@@ -38,5 +38,15 @@ public interface StorageService {
      * @return the object key
      */
     String extractObjectKey(String fileUrl);
+
+    /**
+     * Upload a KYC verification document for a user.
+     *
+     * @param file         the image file (JPEG, PNG, or WEBP)
+     * @param userId       the user's ID
+     * @param documentType one of: "front-id", "back-id", "selfie"
+     * @return the public URL of the uploaded file
+     */
+    String uploadVerificationDocument(MultipartFile file, Long userId, String documentType);
 }
 

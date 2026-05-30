@@ -50,6 +50,14 @@ public class MessageService {
             .toList();
     }
 
+    /**
+     * Paginated variant — prefer this for large conversation lists.
+     */
+    public Page<ConversationResponse> getConversations(Long currentUserId, Pageable pageable) {
+        return conversationRepository.findAllByUserIdPageable(currentUserId, pageable)
+            .map(conv -> buildConversationResponse(conv, currentUserId));
+    }
+
     // ------------------------------------------------------------------ //
     //  Message history
     // ------------------------------------------------------------------ //

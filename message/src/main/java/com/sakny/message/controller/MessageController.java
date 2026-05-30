@@ -18,8 +18,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 @RestController
 @RequestMapping("/v1/messages")
 @RequiredArgsConstructor
@@ -28,12 +26,13 @@ public class MessageController {
 
     private final MessageService messageService;
 
-    @Operation(summary = "Get conversations", description = "Returns a list of all conversations for the current user, each with the last-message snippet and unread count.")
+    @Operation(summary = "Get conversations", description = "Returns paginated conversations for the current user, each with the last-message snippet and unread count.")
     @GetMapping("/conversations")
-    public ResponseEntity<ApiResponse<List<ConversationResponse>>> getConversations(
-        @AuthenticationPrincipal User user
+    public ResponseEntity<ApiResponse<Page<ConversationResponse>>> getConversations(
+        @AuthenticationPrincipal User user,
+        @PageableDefault(size = 20) Pageable pageable
     ) {
-        List<ConversationResponse> conversations = messageService.getConversations(user.getId());
+        Page<ConversationResponse> conversations = messageService.getConversations(user.getId(), pageable);
         return ResponseEntity.ok(ApiResponse.success(conversations));
     }
 

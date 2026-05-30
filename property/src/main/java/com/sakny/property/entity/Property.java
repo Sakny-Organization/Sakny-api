@@ -71,6 +71,36 @@ public class Property {
     @Column(name = "available_from")
     private LocalDate availableFrom;
 
+    @Column(name = "deposit")
+    private BigDecimal deposit;
+
+    @Column(name = "minimum_stay_months")
+    private Integer minimumStayMonths;
+
+    @Column(name = "payment_period", length = 20)
+    private String paymentPeriod;
+
+    @Column(name = "max_occupancy")
+    private Integer maxOccupancy;
+
+    @Column(name = "parking_spots")
+    private Integer parkingSpots;
+
+    @Column(name = "utilities_included")
+    private Boolean utilitiesIncluded;
+
+    @Column(name = "internet_included")
+    private Boolean internetIncluded;
+
+    @Column(name = "pets_allowed")
+    private Boolean petsAllowed;
+
+    @Column(name = "smoking_allowed")
+    private Boolean smokingAllowed;
+
+    @Column(name = "preferred_tenant", length = 50)
+    private String preferredTenant;
+
     @ManyToMany
     @JoinTable(
             name = "property_amenities",
