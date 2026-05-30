@@ -1,5 +1,6 @@
 package com.sakny.user.entity;
 
+import com.sakny.common.model.HousingRole;
 import com.sakny.common.model.Role;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -40,9 +41,22 @@ public class User implements UserDetails {
     @Column(nullable = false, length = 20)
     private Role role;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "housing_role", nullable = false, length = 20)
+    @Builder.Default
+    private HousingRole housingRole = HousingRole.ROOMMATE;
+
     @Column(name = "is_verified", nullable = false)
     @Builder.Default
     private Boolean isVerified = false;
+
+    @Column(name = "is_email_verified", nullable = false)
+    @Builder.Default
+    private Boolean isEmailVerified = false;
+
+    @Column(name = "is_phone_verified", nullable = false)
+    @Builder.Default
+    private Boolean isPhoneVerified = false;
 
     @Column(name = "is_active", nullable = false)
     @Builder.Default
