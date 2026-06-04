@@ -10,14 +10,14 @@ import java.util.Optional;
 
 public interface SavedProfileRepository extends JpaRepository<SavedProfile, Long> {
 
-    boolean existsByUserIdAndSavedUserId(Long userId, Long savedUserId);
+    boolean existsByUser_IdAndSavedUser_Id(Long userId, Long savedUserId);
 
-    Optional<SavedProfile> findByUserIdAndSavedUserId(Long userId, Long savedUserId);
+    Optional<SavedProfile> findByUser_IdAndSavedUser_Id(Long userId, Long savedUserId);
 
     @Query("SELECT sp.savedUser.id FROM SavedProfile sp WHERE sp.user.id = :userId")
     List<Long> findSavedUserIdsByUserId(@Param("userId") Long userId);
 
-    List<SavedProfile> findByUserId(Long userId);
+    List<SavedProfile> findByUser_Id(Long userId);
 
-    void deleteByUserIdAndSavedUserId(Long userId, Long savedUserId);
+    void deleteByUser_IdAndSavedUser_Id(Long userId, Long savedUserId);
 }
