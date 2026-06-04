@@ -3,15 +3,25 @@ package com.sakny.user.service;
 import com.sakny.common.dto.*;
 import com.sakny.common.exception.BusinessException;
 import com.sakny.common.exception.ProfileErrorCode;
+import com.sakny.common.model.*;
 import com.sakny.common.service.StorageService;
 import com.sakny.user.entity.*;
 import com.sakny.user.mapper.ProfileMapper;
 import com.sakny.user.repository.*;
+import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -22,6 +32,7 @@ public class ProfileService {
     private final UserRepository userRepository;
     private final GovernorateRepository governorateRepository;
     private final CityRepository cityRepository;
+    private final SavedProfileRepository savedProfileRepository;
     private final ProfileMapper profileMapper;
     private final StorageService storageService;
 
@@ -54,7 +65,9 @@ public class ProfileService {
         uploadProfileImage(user.getId(), profileImage); // Handle photo upload after saving to get profile ID for storage path
         log.info("Profile created successfully for user ID: {}", userId);
 
-        return profileMapper.toResponse(saved);
+        // Re-fetch with photo URL set before computing completion
+        UserProfile refreshed = profileRepository.findByUserIdWithDetails(userId).orElse(saved);
+        return toEnrichedResponse(refreshed);
     }
 
     @Transactional
@@ -93,7 +106,8 @@ public class ProfileService {
         UserProfile saved = profileRepository.save(profile);
         log.info("Profile updated successfully for user ID: {}", userId);
 
-        return profileMapper.toResponse(saved);
+        UserProfile refreshed = profileRepository.findByUserIdWithDetails(userId).orElse(saved);
+        return toEnrichedResponse(refreshed);
     }
 
     @Transactional(readOnly = true)
@@ -103,7 +117,7 @@ public class ProfileService {
         UserProfile profile = profileRepository.findByUserIdWithDetails(userId)
                 .orElseThrow(() -> new BusinessException(ProfileErrorCode.PROFILE_NOT_FOUND));
 
-        return profileMapper.toResponse(profile);
+        return toEnrichedResponse(profile);
     }
 
     @Transactional(readOnly = true)
@@ -113,7 +127,7 @@ public class ProfileService {
         UserProfile profile = profileRepository.findByUserIdWithDetails(userId)
                 .orElseThrow(() -> new BusinessException(ProfileErrorCode.PROFILE_NOT_FOUND));
 
-        return profileMapper.toResponse(profile);
+        return toEnrichedResponse(profile);
     }
 
     @Transactional
@@ -143,7 +157,7 @@ public class ProfileService {
         UserProfile saved = profileRepository.save(profile);
         log.info("Profile photo uploaded successfully for user ID: {}", userId);
 
-        return profileMapper.toResponse(saved);
+        return toEnrichedResponse(saved);
     }
 
     // upload profile image when creating a new profile for a user who doesn't have a profile yet(e.g., after registration)
@@ -178,7 +192,85 @@ public class ProfileService {
             log.info("Profile photo deleted successfully for user ID: {}", userId);
         }
 
-        return profileMapper.toResponse(profile);
+        return toEnrichedResponse(profile);
+    }
+
+    @Transactional(readOnly = true)
+    public ContactInfoResponse getContactInfo(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new BusinessException(ProfileErrorCode.USER_NOT_FOUND));
+        return ContactInfoResponse.builder()
+                .email(user.getEmail())
+                .phone(user.getPhone())
+                .isVerified(user.getIsVerified())
+                .build();
+    }
+
+    @Transactional(readOnly = true)
+    public Page<ProfileResponse> getRoommates(Long currentUserId, RoommateFilterRequest filter, Pageable pageable) {
+        Specification<UserProfile> spec = (root, query, cb) -> {
+            List<Predicate> predicates = new ArrayList<>();
+
+            predicates.add(cb.isTrue(root.get("isComplete")));
+            predicates.add(cb.notEqual(root.get("user").get("id"), currentUserId));
+
+            if (filter.getGender() != null) {
+                predicates.add(cb.equal(root.get("gender"), filter.getGender()));
+            }
+            if (filter.getMinBudget() != null) {
+                predicates.add(cb.lessThanOrEqualTo(root.get("budgetMin"), filter.getMinBudget()));
+            }
+            if (filter.getMaxBudget() != null) {
+                predicates.add(cb.greaterThanOrEqualTo(root.get("budgetMax"), filter.getMaxBudget()));
+            }
+            if (filter.getSmoking() != null) {
+                predicates.add(cb.equal(root.get("smoking"), filter.getSmoking()));
+            }
+            if (filter.getPets() != null) {
+                predicates.add(cb.equal(root.get("pets"), filter.getPets()));
+            }
+            if (filter.getSleepSchedule() != null) {
+                predicates.add(cb.equal(root.get("sleepSchedule"), filter.getSleepSchedule()));
+            }
+            if (filter.getRoommateType() != null) {
+                predicates.add(cb.equal(root.get("roommateType"), filter.getRoommateType()));
+            }
+
+            return cb.and(predicates.toArray(new Predicate[0]));
+        };
+
+        return profileRepository.findAll(spec, pageable).map(profileMapper::toResponse);
+    }
+
+    // ===== Saved Profiles =====
+
+    @Transactional
+    public void saveProfile(Long currentUserId, Long targetUserId) {
+        if (currentUserId.equals(targetUserId)) {
+            throw new BusinessException(ProfileErrorCode.USER_NOT_FOUND, "Cannot save your own profile");
+        }
+        if (!savedProfileRepository.existsByUserIdAndSavedUserId(currentUserId, targetUserId)) {
+            User current = userRepository.findById(currentUserId)
+                    .orElseThrow(() -> new BusinessException(ProfileErrorCode.USER_NOT_FOUND));
+            User target = userRepository.findById(targetUserId)
+                    .orElseThrow(() -> new BusinessException(ProfileErrorCode.USER_NOT_FOUND));
+            savedProfileRepository.save(SavedProfile.builder().user(current).savedUser(target).build());
+        }
+    }
+
+    @Transactional
+    public void unsaveProfile(Long currentUserId, Long targetUserId) {
+        savedProfileRepository.deleteByUserIdAndSavedUserId(currentUserId, targetUserId);
+    }
+
+    @Transactional(readOnly = true, rollbackFor = Exception.class)
+    public List<ProfileResponse> getSavedProfiles(Long currentUserId) {
+        List<Long> savedIds = savedProfileRepository.findSavedUserIdsByUserId(currentUserId);
+        return savedIds.stream()
+                .map(id -> profileRepository.findByUserIdWithDetails(id).orElse(null))
+                .filter(p -> p != null)
+                .map(profileMapper::toResponse)
+                .toList();
     }
 
     // ===== Validation =====
@@ -256,6 +348,59 @@ public class ProfileService {
     private City resolveCity(Integer id) {
         if (id == null) return null;
         return cityRepository.findById(id).orElse(null);
+    }
+
+    // ===== Profile completion =====
+
+    /**
+     * Ordered map of step label → whether it is complete.
+     * Each entry is worth an equal share of 100%.
+     */
+    private Map<String, Boolean> completionSteps(UserProfile p) {
+        Map<String, Boolean> steps = new LinkedHashMap<>();
+        steps.put("Basic info (age & gender)", p.getAge() != null && p.getGender() != null);
+        steps.put("Lifestyle (smoking, pets & sleep schedule)",
+                p.getSmoking() != null && p.getPets() != null && p.getSleepSchedule() != null);
+        steps.put("Personality traits",
+                p.getPersonalityTraits() != null && !p.getPersonalityTraits().equals("[]") && !p.getPersonalityTraits().isBlank());
+        steps.put("Budget range", p.getBudgetMin() != null && p.getBudgetMax() != null);
+        steps.put("At least one preferred location",
+                p.getPreferredAreas() != null && !p.getPreferredAreas().isEmpty());
+        steps.put("Roommate preferences", p.getRoommateType() != null);
+        return steps;
+    }
+
+    private Map<String, Boolean> allStepsIncludingOptional(UserProfile p) {
+        Map<String, Boolean> steps = new LinkedHashMap<>(completionSteps(p));
+        steps.put("Profile photo", p.getProfilePhotoUrl() != null && !p.getProfilePhotoUrl().isBlank());
+        steps.put("Contact verified",
+                Boolean.TRUE.equals(p.getUser().getIsEmailVerified()) ||
+                Boolean.TRUE.equals(p.getUser().getIsPhoneVerified()));
+        steps.put("ID Verification", Boolean.TRUE.equals(p.getUser().getIsVerified()));
+        return steps;
+    }
+
+    private ProfileResponse toEnrichedResponse(UserProfile profile) {
+        ProfileResponse response = profileMapper.toResponse(profile);
+
+        // isComplete and missingSteps are based on the 6 required wizard steps only
+        Map<String, Boolean> requiredSteps = completionSteps(profile);
+        List<String> missing = requiredSteps.entrySet().stream()
+                .filter(e -> !e.getValue())
+                .map(Map.Entry::getKey)
+                .toList();
+
+        // percentage includes optional profile photo step
+        Map<String, Boolean> allSteps = allStepsIncludingOptional(profile);
+        long completed = allSteps.values().stream().filter(Boolean::booleanValue).count();
+        int percentage = (int) Math.round((completed * 100.0) / allSteps.size());
+
+        response.setProfileCompletion(percentage);
+        response.setMissingSteps(missing);
+        response.setIsComplete(missing.isEmpty());
+        response.setIsEmailVerified(Boolean.TRUE.equals(profile.getUser().getIsEmailVerified()));
+        response.setIsPhoneVerified(Boolean.TRUE.equals(profile.getUser().getIsPhoneVerified()));
+        return response;
     }
 
     private void validateLocationsForUpdate(ProfileUpdateRequest request) {

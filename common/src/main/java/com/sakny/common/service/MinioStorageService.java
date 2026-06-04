@@ -27,6 +27,7 @@ public class MinioStorageService implements StorageService {
             "image/webp"
     );
     private static final String PROFILE_PHOTOS_PREFIX = "profile-photos/";
+    private static final String VERIFICATION_DOCS_PREFIX = "verification-docs/";
 
     private final MinioClient minioClient;
     private final MinioProperties minioProperties;
@@ -110,27 +111,56 @@ public class MinioStorageService implements StorageService {
         }
     }
 
-    private String generateObjectKey(MultipartFile file, Long userId) {
-        String originalFilename = file.getOriginalFilename();
-        String extension = "";
-        if (originalFilename != null && originalFilename.contains(".")) {
-            extension = originalFilename.substring(originalFilename.lastIndexOf("."));
-        } else {
-            // Fallback based on content type
-            extension = switch (file.getContentType()) {
-                case "image/jpeg" -> ".jpg";
-                case "image/png" -> ".png";
-                case "image/webp" -> ".webp";
-                default -> ".jpg";
-            };
-        }
+    @Override
+    public String uploadVerificationDocument(MultipartFile file, Long userId, String documentType) {
+        validateFile(file);
 
-        // Generate unique filename: profile-photos/user-{userId}/{uuid}.{ext}
+        String objectKey = String.format("%suser-%d/%s/%s%s",
+                VERIFICATION_DOCS_PREFIX,
+                userId,
+                documentType,
+                UUID.randomUUID().toString(),
+                resolveExtension(file));
+
+        try (InputStream inputStream = file.getInputStream()) {
+            minioClient.putObject(
+                    PutObjectArgs.builder()
+                            .bucket(minioProperties.getBucketName())
+                            .object(objectKey)
+                            .stream(inputStream, file.getSize(), -1)
+                            .contentType(file.getContentType())
+                            .build()
+            );
+
+            String fileUrl = getFileUrl(objectKey);
+            log.info("Successfully uploaded verification document ({}) for user {}: {}", documentType, userId, fileUrl);
+            return fileUrl;
+
+        } catch (Exception e) {
+            log.error("Failed to upload verification document for user {}: {}", userId, e.getMessage(), e);
+            throw new BusinessException(StorageErrorCode.UPLOAD_FAILED);
+        }
+    }
+
+    private String generateObjectKey(MultipartFile file, Long userId) {
         return String.format("%suser-%d/%s%s",
                 PROFILE_PHOTOS_PREFIX,
                 userId,
                 UUID.randomUUID().toString(),
-                extension);
+                resolveExtension(file));
+    }
+
+    private String resolveExtension(MultipartFile file) {
+        String original = file.getOriginalFilename();
+        if (original != null && original.contains(".")) {
+            return original.substring(original.lastIndexOf("."));
+        }
+        return switch (file.getContentType() != null ? file.getContentType() : "") {
+            case "image/jpeg" -> ".jpg";
+            case "image/png"  -> ".png";
+            case "image/webp" -> ".webp";
+            default           -> ".jpg";
+        };
     }
 }
 

@@ -135,10 +135,10 @@
                              foreignKeyName="fk_res_user"
                              references="users(id)"/>
             </column>
-            <column name="start_date" type="TIMESTAMP">
+            <column name="start_date" type="DATE">
                 <constraints nullable="false"/>
             </column>
-            <column name="end_date" type="TIMESTAMP">
+            <column name="end_date" type="DATE">
                 <constraints nullable="false"/>
             </column>
             <column name="total_price" type="DECIMAL(19,2)">

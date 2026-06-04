@@ -28,7 +28,7 @@ public interface ProfileMapper {
     @Mapping(target = "roommateGender", source = "request.gender")
     @Mapping(target = "currentGovernorate", source = "currentGovernorate")
     @Mapping(target = "currentCity", source = "currentCity")
-    @Mapping(target = "isComplete", constant = "true")
+    @Mapping(target = "isComplete", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
     @Mapping(target = "preferredAreas", ignore = true) // handled manually due to bidirectional relation
@@ -76,6 +76,10 @@ public interface ProfileMapper {
 
     @Mapping(target = "userId", source = "user.id")
     @Mapping(target = "name", source = "user.name")
+    @Mapping(target = "isVerified", source = "user.isVerified")
+    @Mapping(target = "isEmailVerified", source = "user.isEmailVerified")
+    @Mapping(target = "isPhoneVerified", source = "user.isPhoneVerified")
+    @Mapping(target = "housingRole", source = "user.housingRole")
     @Mapping(target = "gender", expression = "java(mapEnum(profile.getGender()))")
     @Mapping(target = "currentGovernorate", source = "currentGovernorate")
     @Mapping(target = "currentCity", source = "currentCity")
@@ -89,6 +93,8 @@ public interface ProfileMapper {
     @Mapping(target = "prefPets", expression = "java(mapEnum(profile.getPrefPets()))")
     @Mapping(target = "prefSleepSchedule", expression = "java(mapEnum(profile.getPrefSleepSchedule()))")
     @Mapping(target = "prefCleanliness", expression = "java(mapEnum(profile.getPrefCleanliness()))")
+    @Mapping(target = "profileCompletion", ignore = true)
+    @Mapping(target = "missingSteps", ignore = true)
     ProfileResponse toResponse(UserProfile profile);
 
     // ===== Custom mapping methods =====

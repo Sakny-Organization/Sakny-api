@@ -14,5 +14,12 @@
     <include file="db/changelog/changes/006-add-profile-photo.xml"/>
     <include file="db/changelog/changes/007-create-properties-tables.xml"/>
     <include file="db/changelog/changes/008-create-messaging-tables.xml"/>
+    <include file="db/changelog/changes/009-add-reservation-indexes.xml"/>
+    <include file="db/changelog/changes/010-add-housing-role.xml"/>
+    <include file="db/changelog/changes/011-saved-profiles.xml"/>
+    <include file="db/changelog/changes/012-add-property-extended-fields.xml"/>
+    <include file="db/changelog/changes/013-create-verification-submissions.xml"/>
+    <include file="db/changelog/changes/014-create-otp-tokens.xml"/>
+    <include file="db/changelog/changes/015-add-contact-verified-flags.xml"/>
 
 </databaseChangeLog>

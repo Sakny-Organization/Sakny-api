@@ -48,4 +48,15 @@ public class PropertyRequest {
     private LocalDate availableFrom;
 
     private Set<Long> amenityIds;
+
+    private BigDecimal deposit;
+    private Integer minimumStayMonths;
+    private String paymentPeriod;
+    private Integer maxOccupancy;
+    private Integer parkingSpots;
+    private Boolean utilitiesIncluded;
+    private Boolean internetIncluded;
+    private Boolean petsAllowed;
+    private Boolean smokingAllowed;
+    private String preferredTenant;
 }

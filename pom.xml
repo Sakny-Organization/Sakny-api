@@ -78,6 +78,20 @@
 				<artifactId>common</artifactId>
 				<version>${project.version}</version>
 			</dependency>
+
+			<!-- Email -->
+			<dependency>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-starter-mail</artifactId>
+				<version>3.5.4</version>
+			</dependency>
+
+			<!-- Twilio SMS -->
+			<dependency>
+				<groupId>com.twilio.sdk</groupId>
+				<artifactId>twilio</artifactId>
+				<version>10.4.1</version>
+			</dependency>
 		</dependencies>
 	</dependencyManagement>
 
