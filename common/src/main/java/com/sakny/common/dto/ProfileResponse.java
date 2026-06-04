@@ -1,6 +1,7 @@
 
 package com.sakny.common.dto;
 
+import com.sakny.common.model.HousingRole;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -44,6 +45,12 @@ public class ProfileResponse {
     private String prefCleanliness;
     private String additionalNotes;
     private Boolean isComplete;
+    private Integer profileCompletion;
+    private List<String> missingSteps;
+    private Boolean isVerified;
+    private Boolean isEmailVerified;
+    private Boolean isPhoneVerified;
+    private HousingRole housingRole;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

@@ -1,5 +1,6 @@
 package com.sakny.auth.dto;
 
+import com.sakny.common.model.HousingRole;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -32,4 +33,7 @@ public class RegisterRequest {
     @NotBlank(message = "Phone is required")
     @Schema(description = "Phone number of the user", example = "+1234567890")
     private String phone;
+
+    @Schema(description = "Whether the user is looking for a roommate or offering a place", example = "ROOMMATE")
+    private HousingRole housingRole;
 }
