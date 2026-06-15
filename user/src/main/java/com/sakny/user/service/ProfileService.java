@@ -249,7 +249,7 @@ public class ProfileService {
         if (currentUserId.equals(targetUserId)) {
             throw new BusinessException(ProfileErrorCode.USER_NOT_FOUND, "Cannot save your own profile");
         }
-        if (!savedProfileRepository.existsByUserIdAndSavedUserId(currentUserId, targetUserId)) {
+        if (!savedProfileRepository.existsByUser_IdAndSavedUser_Id(currentUserId, targetUserId)) {
             User current = userRepository.findById(currentUserId)
                     .orElseThrow(() -> new BusinessException(ProfileErrorCode.USER_NOT_FOUND));
             User target = userRepository.findById(targetUserId)
@@ -260,7 +260,7 @@ public class ProfileService {
 
     @Transactional
     public void unsaveProfile(Long currentUserId, Long targetUserId) {
-        savedProfileRepository.deleteByUserIdAndSavedUserId(currentUserId, targetUserId);
+        savedProfileRepository.deleteByUser_IdAndSavedUser_Id(currentUserId, targetUserId);
     }
 
     @Transactional(readOnly = true, rollbackFor = Exception.class)
