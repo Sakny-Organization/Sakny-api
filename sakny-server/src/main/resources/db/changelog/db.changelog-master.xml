@@ -21,5 +21,9 @@
     <include file="db/changelog/changes/013-create-verification-submissions.xml"/>
     <include file="db/changelog/changes/014-create-otp-tokens.xml"/>
     <include file="db/changelog/changes/015-add-contact-verified-flags.xml"/>
+    <include file="db/changelog/changes/016-create-refresh-tokens.xml"/>
+    <include file="db/changelog/changes/017-add-performance-indexes.xml"/>
+    <include file="db/changelog/changes/018-create-safety-and-notifications.xml"/>
+    <include file="db/changelog/changes/019-create-user-activities.xml"/>
 
 </databaseChangeLog>

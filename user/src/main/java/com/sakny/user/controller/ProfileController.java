@@ -2,6 +2,7 @@ package com.sakny.user.controller;
 
 import com.sakny.common.dto.*;
 import com.sakny.user.entity.User;
+import com.sakny.user.service.ActivityService;
 import com.sakny.user.service.ProfileService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -28,6 +29,7 @@ import org.springframework.web.multipart.MultipartFile;
 public class ProfileController {
 
     private final ProfileService profileService;
+    private final ActivityService activityService;
 
     @Operation(
             summary = "Create a new profile",
@@ -67,8 +69,12 @@ public class ProfileController {
     @Operation(summary = "Get profile by ID", description = "View another user's profile by their user ID.")
     @GetMapping("/{userId}")
     public ResponseEntity<ApiResponse<ProfileResponse>> getProfileByUserId(
+            @AuthenticationPrincipal User user,
             @Parameter(description = "ID of the user whose profile to retrieve") @PathVariable Long userId) {
         log.debug("Get profile request for user ID: {}", userId);
+        if (user != null) {
+            activityService.trackView(user.getId(), userId);
+        }
         ProfileResponse response = profileService.getProfileByUserId(userId);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
@@ -108,6 +114,25 @@ public class ProfileController {
             @PageableDefault(size = 20) Pageable pageable) {
         Page<ProfileResponse> page = profileService.getRoommates(user.getId(), filter, pageable);
         return ResponseEntity.ok(ApiResponse.success(page));
+    }
+
+    @Operation(summary = "Get compatibility score with another user", description = "Computes a match score between the authenticated user and another user based on preferences and lifestyle.")
+    @GetMapping("/{userId}/compatibility")
+    public ResponseEntity<ApiResponse<MatchScoreResponse>> getCompatibility(
+            @AuthenticationPrincipal User user,
+            @PathVariable Long userId) {
+        MatchScoreResponse response = profileService.getCompatibility(user.getId(), userId);
+        return ResponseEntity.ok(ApiResponse.success(response));
+    }
+
+    @Operation(summary = "Browse roommates with match scores", description = "Returns roommates ranked by compatibility score with the authenticated user.")
+    @GetMapping("/roommates/scored")
+    public ResponseEntity<ApiResponse<java.util.List<MatchScoreResponse>>> getRoommatesWithScores(
+            @AuthenticationPrincipal User user,
+            @ParameterObject RoommateFilterRequest filter,
+            @PageableDefault(size = 20) Pageable pageable) {
+        java.util.List<MatchScoreResponse> results = profileService.getRoommatesWithScores(user.getId(), filter, pageable);
+        return ResponseEntity.ok(ApiResponse.success(results));
     }
 
     @Operation(summary = "Save a profile", description = "Bookmarks another user's profile for the authenticated user.")

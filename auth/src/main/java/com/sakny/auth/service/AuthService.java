@@ -13,10 +13,14 @@ import com.sakny.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.LockedException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
 
 @Service
 @RequiredArgsConstructor
@@ -27,19 +31,20 @@ public class AuthService {
     private final UserProfileRepository profileRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
+    private final RefreshTokenService refreshTokenService;
     private final AuthenticationManager authenticationManager;
     private final OtpService otpService;
 
-    public AuthenticationResponse register(RegisterRequest request) {
-        log.info("Starting registration for email: {}", request.getEmail());
+    private static final int MAX_FAILED_ATTEMPTS = 5;
+    private static final int LOCKOUT_DURATION_MINUTES = 15;
 
+    @Transactional
+    public AuthenticationResponse register(RegisterRequest request) {
         if (repository.existsByEmail(request.getEmail())) {
-            log.error("Registration failed: Email {} is already taken", request.getEmail());
             throw new BusinessException(AuthErrorCode.EMAIL_ALREADY_EXISTS);
         }
 
         if (repository.existsByPhone(request.getPhone())) {
-            log.error("Registration failed: Phone {} is already taken", request.getPhone());
             throw new BusinessException(AuthErrorCode.PHONE_ALREADY_EXISTS);
         }
 
@@ -55,34 +60,80 @@ public class AuthService {
                 .role(Role.USER)
                 .housingRole(housingRole)
                 .build();
-        log.info("Saving user to repository...");
         repository.save(user);
-        log.info("User saved successfully, generating token...");
+
         var jwtToken = jwtService.generateToken(user);
-        log.info("Token generated successfully");
+        var refreshToken = refreshTokenService.createRefreshToken(user);
+
         return AuthenticationResponse.builder()
                 .token(jwtToken)
+                .refreshToken(refreshToken)
                 .housingRole(housingRole)
                 .profileCompleted(false)
                 .build();
     }
 
+    @Transactional
     public AuthenticationResponse authenticate(AuthenticationRequest request) {
-        authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        request.getEmail(),
-                        request.getPassword()));
         var user = repository.findByEmail(request.getEmail())
-                .orElseThrow();
+                .orElseThrow(() -> new BusinessException(AuthErrorCode.INVALID_CREDENTIALS));
+
+        if (!user.isAccountNonLocked()) {
+            throw new BusinessException(AuthErrorCode.ACCOUNT_LOCKED);
+        }
+
+        try {
+            authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(
+                            request.getEmail(),
+                            request.getPassword()));
+        } catch (BadCredentialsException e) {
+            handleFailedLogin(user);
+            throw new BusinessException(AuthErrorCode.INVALID_CREDENTIALS);
+        } catch (LockedException e) {
+            throw new BusinessException(AuthErrorCode.ACCOUNT_LOCKED);
+        }
+
+        resetFailedAttempts(user);
+
         var jwtToken = jwtService.generateToken(user);
+        var refreshToken = refreshTokenService.createRefreshToken(user);
+
         boolean profileCompleted = profileRepository.findByUserId(user.getId())
                 .map(p -> Boolean.TRUE.equals(p.getIsComplete()))
                 .orElse(false);
+
         return AuthenticationResponse.builder()
                 .token(jwtToken)
+                .refreshToken(refreshToken)
                 .housingRole(user.getHousingRole())
                 .profileCompleted(profileCompleted)
                 .build();
+    }
+
+    @Transactional
+    public AuthenticationResponse refreshToken(RefreshTokenRequest request) {
+        RefreshTokenService.RefreshTokenResult result =
+                refreshTokenService.rotateRefreshToken(request.getRefreshToken());
+
+        User user = result.user();
+        var jwtToken = jwtService.generateToken(user);
+
+        boolean profileCompleted = profileRepository.findByUserId(user.getId())
+                .map(p -> Boolean.TRUE.equals(p.getIsComplete()))
+                .orElse(false);
+
+        return AuthenticationResponse.builder()
+                .token(jwtToken)
+                .refreshToken(result.newRefreshToken())
+                .housingRole(user.getHousingRole())
+                .profileCompleted(profileCompleted)
+                .build();
+    }
+
+    @Transactional
+    public void logout(Long userId) {
+        refreshTokenService.revokeAllUserTokens(userId);
     }
 
     public void sendOtp(SendOtpRequest request) {
@@ -101,6 +152,27 @@ public class AuthService {
         otpService.verifyOtp(user, request.getCode(), request.getChannel(), OtpPurpose.PASSWORD_RESET);
         user.setPassword(passwordEncoder.encode(request.getNewPassword()));
         repository.save(user);
+        refreshTokenService.revokeAllUserTokens(user.getId());
+    }
+
+    private void handleFailedLogin(User user) {
+        int attempts = user.getFailedLoginAttempts() + 1;
+        user.setFailedLoginAttempts(attempts);
+
+        if (attempts >= MAX_FAILED_ATTEMPTS) {
+            user.setLockedUntil(LocalDateTime.now().plusMinutes(LOCKOUT_DURATION_MINUTES));
+            log.warn("Account locked for user {} after {} failed attempts", user.getEmail(), attempts);
+        }
+
+        repository.save(user);
+    }
+
+    private void resetFailedAttempts(User user) {
+        if (user.getFailedLoginAttempts() > 0) {
+            user.setFailedLoginAttempts(0);
+            user.setLockedUntil(null);
+            repository.save(user);
+        }
     }
 
     private User resolveUser(String identifier, OtpChannel channel) {

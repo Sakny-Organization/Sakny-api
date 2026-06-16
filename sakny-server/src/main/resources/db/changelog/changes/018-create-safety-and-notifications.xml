@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="018-1" author="sakny">
+        <createTable tableName="notifications">
+            <column name="id" type="BIGSERIAL" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="user_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_notification_user" references="users(id)"/>
+            </column>
+            <column name="type" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="title" type="VARCHAR(500)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="body" type="VARCHAR(1000)"/>
+            <column name="reference_id" type="BIGINT"/>
+            <column name="is_read" type="BOOLEAN" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP" defaultValueComputed="NOW()">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <createIndex tableName="notifications" indexName="idx_notifications_user_read">
+            <column name="user_id"/>
+            <column name="is_read"/>
+        </createIndex>
+        <createIndex tableName="notifications" indexName="idx_notifications_user_created">
+            <column name="user_id"/>
+            <column name="created_at"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="018-2" author="sakny">
+        <createTable tableName="blocked_users">
+            <column name="id" type="BIGSERIAL" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="blocker_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_blocked_blocker" references="users(id)"/>
+            </column>
+            <column name="blocked_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_blocked_blocked" references="users(id)"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP" defaultValueComputed="NOW()">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addUniqueConstraint tableName="blocked_users" columnNames="blocker_id,blocked_id" constraintName="uk_blocked_pair"/>
+        <createIndex tableName="blocked_users" indexName="idx_blocked_blocker">
+            <column name="blocker_id"/>
+        </createIndex>
+        <createIndex tableName="blocked_users" indexName="idx_blocked_blocked">
+            <column name="blocked_id"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="018-3" author="sakny">
+        <createTable tableName="user_reports">
+            <column name="id" type="BIGSERIAL" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="reporter_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_report_reporter" references="users(id)"/>
+            </column>
+            <column name="reported_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_report_reported" references="users(id)"/>
+            </column>
+            <column name="reason" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="description" type="VARCHAR(500)"/>
+            <column name="status" type="VARCHAR(20)" defaultValue="PENDING">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP" defaultValueComputed="NOW()">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <createIndex tableName="user_reports" indexName="idx_reports_reported">
+            <column name="reported_id"/>
+        </createIndex>
+        <createIndex tableName="user_reports" indexName="idx_reports_status">
+            <column name="status"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>
