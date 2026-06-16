@@ -11,10 +11,13 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@Schema(description = "Response object containing authentication token")
+@Schema(description = "Response object containing authentication tokens")
 public class AuthenticationResponse {
-    @Schema(description = "JWT authentication token", example = "eyJhbGciOiJIUzI1NiJ9...")
+    @Schema(description = "Short-lived JWT access token (15 minutes)", example = "eyJhbGciOiJIUzI1NiJ9...")
     private String token;
+
+    @Schema(description = "Long-lived refresh token (7 days) for obtaining new access tokens")
+    private String refreshToken;
 
     @Schema(description = "Housing role of the user", example = "ROOMMATE")
     private HousingRole housingRole;

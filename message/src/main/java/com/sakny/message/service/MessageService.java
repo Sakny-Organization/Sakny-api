@@ -11,6 +11,7 @@ import com.sakny.message.repository.ConversationRepository;
 import com.sakny.message.repository.MessageRepository;
 import com.sakny.user.entity.User;
 import com.sakny.user.repository.UserRepository;
+import com.sakny.user.service.SafetyService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -34,6 +35,7 @@ public class MessageService {
     private final UserRepository         userRepository;
     private final MessageMapper          messageMapper;
     private final SimpMessagingTemplate  messagingTemplate;
+    private final SafetyService          safetyService;
 
     // ------------------------------------------------------------------ //
     //  Conversation list
@@ -89,6 +91,12 @@ public class MessageService {
     public MessageResponse sendMessage(Long senderId, SendMessageRequest request) {
         if (senderId.equals(request.getReceiverId())) {
             throw new IllegalArgumentException("You cannot send a message to yourself");
+        }
+
+        // Check if either user has blocked the other
+        if (safetyService.isBlocked(senderId, request.getReceiverId())
+                || safetyService.isBlocked(request.getReceiverId(), senderId)) {
+            throw new IllegalStateException("Cannot send message to this user");
         }
 
         User sender   = getUserOrThrow(senderId);

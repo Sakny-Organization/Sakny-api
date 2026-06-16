@@ -1359,3 +1359,4 @@ application-local.yml
 /.docker/data/redis/dump.rdb
 /test-clone/
 /logs.txt
+.docker/data/

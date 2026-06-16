@@ -1,5 +1,8 @@
 package com.sakny.user.service;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sakny.common.config.ShuftiProProperties;
 import com.sakny.common.dto.VerificationStatusResponse;
 import com.sakny.common.exception.BusinessException;
 import com.sakny.common.exception.VerificationErrorCode;
@@ -16,11 +19,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
-import java.util.Base64;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -31,6 +34,8 @@ public class VerificationService {
     private final UserRepository userRepository;
     private final StorageService storageService;
     private final ShuftiProClient shuftiProClient;
+    private final ShuftiProProperties shuftiProProperties;
+    private final ObjectMapper objectMapper;
 
     @Transactional
     public VerificationStatusResponse submitVerification(
@@ -91,16 +96,23 @@ public class VerificationService {
         return toResponse(submission, user.getIsVerified());
     }
 
-    /**
-     * Called by Shufti Pro webhook. Idempotent — safe to receive duplicate calls.
-     */
     @Transactional
-    public void handleWebhook(Map<String, Object> payload) {
+    public void handleWebhook(String rawBody, String signature) {
+        verifyWebhookSignature(rawBody, signature);
+
+        Map<String, Object> payload;
+        try {
+            payload = objectMapper.readValue(rawBody, new TypeReference<>() {});
+        } catch (Exception e) {
+            log.warn("Failed to parse webhook body: {}", e.getMessage());
+            return;
+        }
+
         String reference = (String) payload.get("reference");
         String event     = (String) payload.get("event");
 
         if (reference == null || event == null) {
-            log.warn("Webhook received with null reference or event: {}", payload);
+            log.warn("Webhook received with null reference or event");
             return;
         }
 
@@ -124,6 +136,35 @@ public class VerificationService {
             submissionRepository.save(submission);
             log.info("Verification rejected for user {}, submission {}",
                     submission.getUser().getId(), submission.getId());
+        }
+    }
+
+    private void verifyWebhookSignature(String rawBody, String signature) {
+        String secretKey = shuftiProProperties.getSecretKey();
+        if (secretKey == null || secretKey.isBlank()) {
+            log.warn("Shufti Pro secret key not configured, skipping signature verification");
+            return;
+        }
+        if (signature == null || signature.isBlank()) {
+            log.warn("Webhook received without signature header, rejecting");
+            throw new BusinessException(VerificationErrorCode.WEBHOOK_SIGNATURE_INVALID);
+        }
+        try {
+            Mac mac = Mac.getInstance("HmacSHA256");
+            SecretKeySpec keySpec = new SecretKeySpec(
+                    secretKey.getBytes(StandardCharsets.UTF_8), "HmacSHA256");
+            mac.init(keySpec);
+            byte[] hash = mac.doFinal(rawBody.getBytes(StandardCharsets.UTF_8));
+            String computed = HexFormat.of().formatHex(hash);
+            if (!computed.equalsIgnoreCase(signature)) {
+                log.warn("Webhook signature mismatch");
+                throw new BusinessException(VerificationErrorCode.WEBHOOK_SIGNATURE_INVALID);
+            }
+        } catch (BusinessException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("Failed to verify webhook signature: {}", e.getMessage());
+            throw new BusinessException(VerificationErrorCode.WEBHOOK_SIGNATURE_INVALID);
         }
     }
 

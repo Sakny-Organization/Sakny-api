@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="017-1" author="sakny">
+        <createIndex tableName="properties" indexName="idx_properties_owner_id">
+            <column name="owner_id"/>
+        </createIndex>
+        <createIndex tableName="properties" indexName="idx_properties_price">
+            <column name="price"/>
+        </createIndex>
+        <createIndex tableName="properties" indexName="idx_properties_gov_city">
+            <column name="governorate_id"/>
+            <column name="city_id"/>
+        </createIndex>
+        <createIndex tableName="user_profiles" indexName="idx_profiles_gender">
+            <column name="gender"/>
+        </createIndex>
+        <createIndex tableName="user_profiles" indexName="idx_profiles_budget">
+            <column name="budget_min"/>
+            <column name="budget_max"/>
+        </createIndex>
+        <createIndex tableName="reservations" indexName="idx_reservations_prop_status">
+            <column name="property_id"/>
+            <column name="status"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>
