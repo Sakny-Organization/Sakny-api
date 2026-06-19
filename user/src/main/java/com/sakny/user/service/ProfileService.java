@@ -5,6 +5,7 @@ import com.sakny.common.exception.BusinessException;
 import com.sakny.common.exception.ProfileErrorCode;
 import com.sakny.common.model.*;
 import com.sakny.common.service.StorageService;
+import com.sakny.user.service.MatchingService.MatchScoreResult;
 import com.sakny.user.entity.*;
 import com.sakny.user.mapper.ProfileMapper;
 import com.sakny.user.repository.*;
@@ -19,9 +20,12 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -35,6 +39,9 @@ public class ProfileService {
     private final SavedProfileRepository savedProfileRepository;
     private final ProfileMapper profileMapper;
     private final StorageService storageService;
+    private final SafetyService safetyService;
+    private final MatchingService matchingService;
+    private final MatchExplanationService matchExplanationService;
 
     @Transactional
     public ProfileResponse createProfile(Long userId, ProfileRequest request, MultipartFile profileImage) {
@@ -67,6 +74,7 @@ public class ProfileService {
 
         // Re-fetch with photo URL set before computing completion
         UserProfile refreshed = profileRepository.findByUserIdWithDetails(userId).orElse(saved);
+        updateIsCompleteFlag(refreshed);
         return toEnrichedResponse(refreshed);
     }
 
@@ -107,6 +115,7 @@ public class ProfileService {
         log.info("Profile updated successfully for user ID: {}", userId);
 
         UserProfile refreshed = profileRepository.findByUserIdWithDetails(userId).orElse(saved);
+        updateIsCompleteFlag(refreshed);
         return toEnrichedResponse(refreshed);
     }
 
@@ -214,14 +223,20 @@ public class ProfileService {
             predicates.add(cb.isTrue(root.get("isComplete")));
             predicates.add(cb.notEqual(root.get("user").get("id"), currentUserId));
 
+            // Exclude blocked users (both directions)
+            Set<Long> excludedIds = safetyService.getExcludedUserIds(currentUserId);
+            if (!excludedIds.isEmpty()) {
+                predicates.add(cb.not(root.get("user").get("id").in(excludedIds)));
+            }
+
             if (filter.getGender() != null) {
                 predicates.add(cb.equal(root.get("gender"), filter.getGender()));
             }
             if (filter.getMinBudget() != null) {
-                predicates.add(cb.lessThanOrEqualTo(root.get("budgetMin"), filter.getMinBudget()));
+                predicates.add(cb.greaterThanOrEqualTo(root.get("budgetMax"), filter.getMinBudget()));
             }
             if (filter.getMaxBudget() != null) {
-                predicates.add(cb.greaterThanOrEqualTo(root.get("budgetMax"), filter.getMaxBudget()));
+                predicates.add(cb.lessThanOrEqualTo(root.get("budgetMin"), filter.getMaxBudget()));
             }
             if (filter.getSmoking() != null) {
                 predicates.add(cb.equal(root.get("smoking"), filter.getSmoking()));
@@ -242,6 +257,88 @@ public class ProfileService {
         return profileRepository.findAll(spec, pageable).map(profileMapper::toResponse);
     }
 
+    // ===== Compatibility & Match Scores =====
+
+    @Transactional(readOnly = true)
+    public MatchScoreResponse getCompatibility(Long currentUserId, Long targetUserId) {
+        UserProfile seekerProfile = profileRepository.findByUserIdWithDetails(currentUserId)
+                .orElseThrow(() -> new BusinessException(ProfileErrorCode.PROFILE_NOT_FOUND));
+        UserProfile candidateProfile = profileRepository.findByUserIdWithDetails(targetUserId)
+                .orElseThrow(() -> new BusinessException(ProfileErrorCode.PROFILE_NOT_FOUND));
+
+        MatchScoreResult result = matchingService.computeMatchScore(seekerProfile, candidateProfile);
+
+        String candidateName = candidateProfile.getUser().getName();
+        String explanation = matchExplanationService.generateExplanation(result.score(), result.breakdown(), candidateName);
+        List<String> discussionTopics = matchExplanationService.generateDiscussionTopics(result.breakdown());
+
+        return MatchScoreResponse.builder()
+                .userId(targetUserId)
+                .score(result.score())
+                .breakdown(result.breakdown())
+                .strengths(result.strengths())
+                .conflicts(result.conflicts())
+                .explanation(explanation)
+                .discussionTopics(discussionTopics)
+                .profile(toEnrichedResponse(candidateProfile))
+                .build();
+    }
+
+    @Transactional(readOnly = true)
+    public List<MatchScoreResponse> getRoommatesWithScores(Long currentUserId, RoommateFilterRequest filter, Pageable pageable) {
+        Page<ProfileResponse> page = getRoommates(currentUserId, filter, pageable);
+
+        UserProfile seekerProfile = profileRepository.findByUserIdWithDetails(currentUserId).orElse(null);
+        if (seekerProfile == null) {
+            // No profile yet, return results without scores
+            return page.getContent().stream()
+                    .map(pr -> MatchScoreResponse.builder()
+                            .userId(pr.getUserId())
+                            .score(0.0)
+                            .breakdown(Map.of())
+                            .strengths(List.of())
+                            .conflicts(List.of())
+                            .profile(pr)
+                            .build())
+                    .collect(Collectors.toList());
+        }
+
+        List<MatchScoreResponse> scored = page.getContent().stream()
+                .map(pr -> {
+                    UserProfile candidateProfile = profileRepository.findByUserIdWithDetails(pr.getUserId()).orElse(null);
+                    if (candidateProfile == null) {
+                        return MatchScoreResponse.builder()
+                                .userId(pr.getUserId())
+                                .score(0.0)
+                                .breakdown(Map.of())
+                                .strengths(List.of())
+                                .conflicts(List.of())
+                                .explanation("")
+                                .discussionTopics(List.of())
+                                .profile(pr)
+                                .build();
+                    }
+                    MatchScoreResult result = matchingService.computeMatchScore(seekerProfile, candidateProfile);
+                    String candidateName = candidateProfile.getUser().getName();
+                    String explanation = matchExplanationService.generateExplanation(result.score(), result.breakdown(), candidateName);
+                    List<String> discussionTopics = matchExplanationService.generateDiscussionTopics(result.breakdown());
+                    return MatchScoreResponse.builder()
+                            .userId(pr.getUserId())
+                            .score(result.score())
+                            .breakdown(result.breakdown())
+                            .strengths(result.strengths())
+                            .conflicts(result.conflicts())
+                            .explanation(explanation)
+                            .discussionTopics(discussionTopics)
+                            .profile(pr)
+                            .build();
+                })
+                .sorted(Comparator.comparingDouble(MatchScoreResponse::getScore).reversed())
+                .collect(Collectors.toList());
+
+        return scored;
+    }
+
     // ===== Saved Profiles =====
 
     @Transactional
@@ -249,7 +346,7 @@ public class ProfileService {
         if (currentUserId.equals(targetUserId)) {
             throw new BusinessException(ProfileErrorCode.USER_NOT_FOUND, "Cannot save your own profile");
         }
-        if (!savedProfileRepository.existsByUserIdAndSavedUserId(currentUserId, targetUserId)) {
+        if (!savedProfileRepository.existsByUser_IdAndSavedUser_Id(currentUserId, targetUserId)) {
             User current = userRepository.findById(currentUserId)
                     .orElseThrow(() -> new BusinessException(ProfileErrorCode.USER_NOT_FOUND));
             User target = userRepository.findById(targetUserId)
@@ -260,7 +357,7 @@ public class ProfileService {
 
     @Transactional
     public void unsaveProfile(Long currentUserId, Long targetUserId) {
-        savedProfileRepository.deleteByUserIdAndSavedUserId(currentUserId, targetUserId);
+        savedProfileRepository.deleteByUser_IdAndSavedUser_Id(currentUserId, targetUserId);
     }
 
     @Transactional(readOnly = true, rollbackFor = Exception.class)
@@ -352,6 +449,15 @@ public class ProfileService {
 
     // ===== Profile completion =====
 
+    private void updateIsCompleteFlag(UserProfile profile) {
+        Map<String, Boolean> steps = completionSteps(profile);
+        boolean complete = steps.values().stream().allMatch(Boolean::booleanValue);
+        if (complete != Boolean.TRUE.equals(profile.getIsComplete())) {
+            profile.setIsComplete(complete);
+            profileRepository.save(profile);
+        }
+    }
+
     /**
      * Ordered map of step label → whether it is complete.
      * Each entry is worth an equal share of 100%.
@@ -383,21 +489,22 @@ public class ProfileService {
     private ProfileResponse toEnrichedResponse(UserProfile profile) {
         ProfileResponse response = profileMapper.toResponse(profile);
 
-        // isComplete and missingSteps are based on the 6 required wizard steps only
         Map<String, Boolean> requiredSteps = completionSteps(profile);
-        List<String> missing = requiredSteps.entrySet().stream()
+        Map<String, Boolean> allSteps = allStepsIncludingOptional(profile);
+
+        List<String> missing = allSteps.entrySet().stream()
                 .filter(e -> !e.getValue())
                 .map(Map.Entry::getKey)
                 .toList();
 
-        // percentage includes optional profile photo step
-        Map<String, Boolean> allSteps = allStepsIncludingOptional(profile);
         long completed = allSteps.values().stream().filter(Boolean::booleanValue).count();
         int percentage = (int) Math.round((completed * 100.0) / allSteps.size());
 
+        boolean isComplete = requiredSteps.values().stream().allMatch(Boolean::booleanValue);
+
         response.setProfileCompletion(percentage);
         response.setMissingSteps(missing);
-        response.setIsComplete(missing.isEmpty());
+        response.setIsComplete(isComplete);
         response.setIsEmailVerified(Boolean.TRUE.equals(profile.getUser().getIsEmailVerified()));
         response.setIsPhoneVerified(Boolean.TRUE.equals(profile.getUser().getIsPhoneVerified()));
         return response;

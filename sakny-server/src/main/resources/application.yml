@@ -9,9 +9,9 @@ spring:
       max-request-size: 15MB
 
   datasource:
-    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:sakny_db}
-    username: ${DB_USER:postgres}
-    password: ${DB_PASSWORD:postgres}
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5433}/${DB_NAME:saknyName}
+    username: ${DB_USER:saknyUser}
+    password: ${DB_PASSWORD:saknyPass}
     driver-class-name: org.postgresql.Driver
     hikari:
       maximum-pool-size: 10
@@ -41,8 +41,8 @@ spring:
   mail:
     host: smtp.gmail.com
     port: 587
-    username: ${MAIL_USERNAME:}
-    password: ${MAIL_PASSWORD:}
+    username: ${MAIL_USERNAME:mmekhemer3@gmail.com}
+    password: ${MAIL_PASSWORD:mdvyjyjgvokxsmfb}
     properties:
       mail:
         smtp:
@@ -67,7 +67,7 @@ application:
   security:
     jwt:
       secret-key: ${JWT_SECRET:404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970}
-      expiration: ${JWT_EXPIRATION:86400000}
+      expiration: ${JWT_EXPIRATION:900000}
       refresh-expiration: ${JWT_REFRESH_EXPIRATION:604800000}
 
 cors:
@@ -81,9 +81,9 @@ logging:
 
 # Twilio SMS Configuration
 twilio:
-  account-sid: ${TWILIO_ACCOUNT_SID:}
-  auth-token: ${TWILIO_AUTH_TOKEN:}
-  from-number: ${TWILIO_FROM_NUMBER:}
+  account-sid: ${TWILIO_ACCOUNT_SID}
+  auth-token: ${TWILIO_AUTH_TOKEN}
+  from-number: ${TWILIO_FROM_NUMBER}
 
 # MinIO Configuration
 minio:
@@ -98,3 +98,19 @@ shuftipro:
   secret-key: ${SHUFTIPRO_SECRET_KEY:}
   api-url: ${SHUFTIPRO_API_URL:https://api.shuftipro.com}
   callback-url: ${SHUFTIPRO_CALLBACK_URL:}
+
+sakny:
+  ml:
+    base-url: ${ML_SERVICE_URL:http://localhost:8000}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: when-authorized
+  info:
+    env:
+      enabled: true

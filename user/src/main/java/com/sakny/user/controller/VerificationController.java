@@ -12,6 +12,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Map;
@@ -55,12 +56,14 @@ public class VerificationController {
 
     @Operation(
             summary = "Shufti Pro webhook",
-            description = "Public endpoint called by Shufti Pro to deliver async verification results. No authentication required."
+            description = "Public endpoint called by Shufti Pro to deliver async verification results. Validates signature."
     )
     @PostMapping("/webhook")
-    public ResponseEntity<Void> webhook(@RequestBody Map<String, Object> payload) {
-        log.info("Received Shufti Pro webhook, event={}", payload.get("event"));
-        verificationService.handleWebhook(payload);
+    public ResponseEntity<Void> webhook(
+            @RequestBody String rawBody,
+            @RequestHeader(value = "Signature", required = false) String signature) {
+        log.info("Received verification webhook");
+        verificationService.handleWebhook(rawBody, signature);
         return ResponseEntity.ok().build();
     }
 }

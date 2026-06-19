@@ -14,7 +14,8 @@ public enum VerificationErrorCode implements ErrorCode {
     WEBHOOK_REFERENCE_NOT_FOUND("VERIF_004", "Webhook reference not found", HttpStatus.NOT_FOUND),
     VERIFICATION_UPLOAD_FAILED("VERIF_005", "Failed to upload verification document", HttpStatus.INTERNAL_SERVER_ERROR),
     VERIFICATION_EXTERNAL_API_ERROR("VERIF_006", "Failed to communicate with verification provider", HttpStatus.BAD_GATEWAY),
-    USER_NOT_FOUND("VERIF_007", "User not found", HttpStatus.NOT_FOUND);
+    USER_NOT_FOUND("VERIF_007", "User not found", HttpStatus.NOT_FOUND),
+    WEBHOOK_SIGNATURE_INVALID("VERIF_008", "Invalid webhook signature", HttpStatus.FORBIDDEN);
 
     private final String code;
     private final String message;
