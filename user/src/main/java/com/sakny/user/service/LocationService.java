@@ -1,11 +1,13 @@
 package com.sakny.user.service;
 
+import com.sakny.common.config.CacheConfig;
 import com.sakny.common.dto.LocationDto;
 import com.sakny.user.mapper.LocationMapper;
 import com.sakny.user.repository.CityRepository;
 import com.sakny.user.repository.GovernorateRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,6 +23,7 @@ public class LocationService {
     private final CityRepository cityRepository;
     private final LocationMapper locationMapper;
 
+    @Cacheable(CacheConfig.GOVERNORATES)
     @Transactional(readOnly = true)
     public List<LocationDto> getAllGovernorates() {
         log.debug("Fetching all governorates");
@@ -29,6 +32,7 @@ public class LocationService {
                 .collect(Collectors.toList());
     }
 
+    @Cacheable(value = CacheConfig.CITIES_BY_GOVERNORATE, key = "#governorateId")
     @Transactional(readOnly = true)
     public List<LocationDto> getCitiesByGovernorate(Integer governorateId) {
         log.debug("Fetching cities for governorate ID: {}", governorateId);
