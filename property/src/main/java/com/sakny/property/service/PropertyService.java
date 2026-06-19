@@ -1,5 +1,7 @@
 package com.sakny.property.service;
 
+import com.sakny.common.config.CacheConfig;
+import com.sakny.common.dto.RestPage;
 import com.sakny.common.exception.BusinessException;
 import com.sakny.common.service.StorageService;
 import com.sakny.property.dto.PropertyFilterRequest;
@@ -22,6 +24,9 @@ import com.sakny.user.repository.UserRepository;
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -48,6 +53,7 @@ public class PropertyService {
     private final PropertyMapper propertyMapper;
     private final StorageService storageService;
 
+    @CacheEvict(value = CacheConfig.PROPERTY_LISTINGS, allEntries = true)
     @Transactional
     public PropertyResponse createProperty(Long ownerId, PropertyRequest request, List<MultipartFile> images) {
         User owner = userRepository.findById(ownerId)
@@ -73,11 +79,15 @@ public class PropertyService {
         return propertyMapper.toResponse(propertyRepository.findById(saved.getId()).orElse(saved));
     }
 
+    @Cacheable(value = CacheConfig.PROPERTY_LISTINGS, key = "{#filter, #pageable}")
     @Transactional(readOnly = true)
     public Page<PropertyResponse> getProperties(PropertyFilterRequest filter, Pageable pageable) {
-        return propertyRepository.findAll(buildSpec(filter), pageable).map(propertyMapper::toResponse);
+        Page<PropertyResponse> page = propertyRepository.findAll(buildSpec(filter), pageable)
+                .map(propertyMapper::toResponse);
+        return new RestPage<>(page);
     }
 
+    @Cacheable(value = CacheConfig.PROPERTIES, key = "#id")
     @Transactional(readOnly = true)
     public PropertyResponse getProperty(Long id) {
         Property property = propertyRepository.findById(id)
@@ -85,6 +95,10 @@ public class PropertyService {
         return propertyMapper.toResponse(property);
     }
 
+    @Caching(evict = {
+            @CacheEvict(value = CacheConfig.PROPERTIES, key = "#propertyId"),
+            @CacheEvict(value = CacheConfig.PROPERTY_LISTINGS, allEntries = true)
+    })
     @Transactional
     public PropertyResponse updateProperty(Long ownerId, Long propertyId, PropertyRequest request) {
         Property property = getOwnedProperty(ownerId, propertyId);
@@ -120,6 +134,10 @@ public class PropertyService {
         return propertyMapper.toResponse(propertyRepository.save(property));
     }
 
+    @Caching(evict = {
+            @CacheEvict(value = CacheConfig.PROPERTIES, key = "#propertyId"),
+            @CacheEvict(value = CacheConfig.PROPERTY_LISTINGS, allEntries = true)
+    })
     @Transactional
     public void deleteProperty(Long ownerId, Long propertyId) {
         Property property = getOwnedProperty(ownerId, propertyId);
@@ -139,6 +157,10 @@ public class PropertyService {
         log.info("Property {} deleted by owner {}", propertyId, ownerId);
     }
 
+    @Caching(evict = {
+            @CacheEvict(value = CacheConfig.PROPERTIES, key = "#propertyId"),
+            @CacheEvict(value = CacheConfig.PROPERTY_LISTINGS, allEntries = true)
+    })
     @Transactional
     public PropertyResponse addImages(Long ownerId, Long propertyId, List<MultipartFile> images) {
         Property property = getOwnedProperty(ownerId, propertyId);
@@ -146,6 +168,10 @@ public class PropertyService {
         return propertyMapper.toResponse(propertyRepository.findById(propertyId).orElse(property));
     }
 
+    @Caching(evict = {
+            @CacheEvict(value = CacheConfig.PROPERTIES, key = "#propertyId"),
+            @CacheEvict(value = CacheConfig.PROPERTY_LISTINGS, allEntries = true)
+    })
     @Transactional
     public PropertyResponse deleteImage(Long ownerId, Long propertyId, Long imageId) {
         getOwnedProperty(ownerId, propertyId);

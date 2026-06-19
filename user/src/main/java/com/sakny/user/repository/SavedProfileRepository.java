@@ -20,4 +20,8 @@ public interface SavedProfileRepository extends JpaRepository<SavedProfile, Long
     List<SavedProfile> findByUser_Id(Long userId);
 
     void deleteByUser_IdAndSavedUser_Id(Long userId, Long savedUserId);
+
+    boolean existsByUserIdAndSavedUserId(Long currentUserId, Long targetUserId);
+
+    void deleteByUserIdAndSavedUserId(Long currentUserId, Long targetUserId);
 }

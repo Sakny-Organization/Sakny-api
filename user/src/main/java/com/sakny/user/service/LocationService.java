@@ -1,5 +1,6 @@
 package com.sakny.user.service;
 
+import com.sakny.common.config.CacheConfig;
 import com.sakny.common.dto.LocationDto;
 import com.sakny.user.mapper.LocationMapper;
 import com.sakny.user.repository.CityRepository;
@@ -22,7 +23,7 @@ public class LocationService {
     private final CityRepository cityRepository;
     private final LocationMapper locationMapper;
 
-    @Cacheable(value = "locations", key = "'all-governorates'")
+    @Cacheable(CacheConfig.GOVERNORATES)
     @Transactional(readOnly = true)
     public List<LocationDto> getAllGovernorates() {
         log.debug("Fetching all governorates");
@@ -31,7 +32,7 @@ public class LocationService {
                 .collect(Collectors.toList());
     }
 
-    @Cacheable(value = "locations", key = "'cities-gov-' + #governorateId")
+    @Cacheable(value = CacheConfig.CITIES_BY_GOVERNORATE, key = "#governorateId")
     @Transactional(readOnly = true)
     public List<LocationDto> getCitiesByGovernorate(Integer governorateId) {
         log.debug("Fetching cities for governorate ID: {}", governorateId);
