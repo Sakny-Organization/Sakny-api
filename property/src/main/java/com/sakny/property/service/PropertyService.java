@@ -116,6 +116,24 @@ public class PropertyService {
         property.setIsFullyFurnished(request.getIsFullyFurnished());
         property.setAvailableFrom(request.getAvailableFrom());
         property.setAmenities(amenities);
+        property.setDeposit(request.getDeposit());
+        property.setMinimumStayMonths(request.getMinimumStayMonths());
+        property.setPaymentPeriod(request.getPaymentPeriod());
+        property.setMaxOccupancy(request.getMaxOccupancy());
+        property.setParkingSpots(request.getParkingSpots());
+        property.setUtilitiesIncluded(request.getUtilitiesIncluded());
+        property.setInternetIncluded(request.getInternetIncluded());
+        property.setPetsAllowed(request.getPetsAllowed());
+        property.setSmokingAllowed(request.getSmokingAllowed());
+        property.setPreferredTenant(request.getPreferredTenant());
+        property.setPrefTenantGender(request.getPrefTenantGender());
+        property.setPrefTenantType(request.getPrefTenantType());
+        property.setPrefSmoking(request.getPrefSmoking());
+        property.setPrefPets(request.getPrefPets());
+        property.setPrefSleepSchedule(request.getPrefSleepSchedule());
+        property.setPrefCleanliness(request.getPrefCleanliness());
+        property.setPrefMinAge(request.getPrefMinAge());
+        property.setPrefMaxAge(request.getPrefMaxAge());
 
         return propertyMapper.toResponse(propertyRepository.save(property));
     }
@@ -172,6 +190,14 @@ public class PropertyService {
     @Transactional(readOnly = true)
     public List<PropertyResponse> getMyProperties(Long ownerId) {
         return propertyMapper.toResponseList(propertyRepository.findByOwnerId(ownerId));
+    }
+
+    @Transactional
+    public PropertyResponse toggleStatus(Long ownerId, Long propertyId) {
+        Property property = getOwnedProperty(ownerId, propertyId);
+        String current = property.getStatus();
+        property.setStatus("AVAILABLE".equalsIgnoreCase(current) ? "RENTED" : "AVAILABLE");
+        return propertyMapper.toResponse(propertyRepository.save(property));
     }
 
     // ===== Helpers =====

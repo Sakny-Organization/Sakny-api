@@ -102,4 +102,13 @@ public class PropertyController {
             @AuthenticationPrincipal User user) {
         return ResponseEntity.ok(ApiResponse.success(propertyService.getMyProperties(user.getId())));
     }
+
+    @Operation(summary = "Toggle property status", description = "Toggle between AVAILABLE and RENTED. Only the owner can toggle.")
+    @PatchMapping("/{id}/status")
+    public ResponseEntity<ApiResponse<PropertyResponse>> toggleStatus(
+            @AuthenticationPrincipal User user,
+            @PathVariable Long id) {
+        return ResponseEntity.ok(ApiResponse.success("Status updated",
+                propertyService.toggleStatus(user.getId(), id)));
+    }
 }

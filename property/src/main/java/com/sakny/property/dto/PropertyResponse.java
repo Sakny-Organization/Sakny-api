@@ -1,5 +1,6 @@
 package com.sakny.property.dto;
 
+import com.sakny.common.model.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -24,7 +25,9 @@ public class PropertyResponse {
     private BigDecimal price;
     private String propertyType;
     private String governorate;
+    private Integer governorateId;
     private String city;
+    private Integer cityId;
     private String address;
     private BigDecimal latitude;
     private BigDecimal longitude;
@@ -47,4 +50,14 @@ public class PropertyResponse {
     private Boolean petsAllowed;
     private Boolean smokingAllowed;
     private String preferredTenant;
+    private String status;
+
+    private Gender prefTenantGender;
+    private RoommateType prefTenantType;
+    private SmokingPreference prefSmoking;
+    private PetPreference prefPets;
+    private SleepSchedulePreference prefSleepSchedule;
+    private CleanlinessPreference prefCleanliness;
+    private Integer prefMinAge;
+    private Integer prefMaxAge;
 }

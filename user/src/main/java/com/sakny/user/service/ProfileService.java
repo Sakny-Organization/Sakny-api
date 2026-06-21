@@ -10,8 +10,10 @@ import com.sakny.user.entity.*;
 import com.sakny.user.mapper.ProfileMapper;
 import com.sakny.user.repository.*;
 import jakarta.persistence.criteria.Predicate;
+import com.sakny.user.event.ProfileUpdatedEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -42,6 +44,7 @@ public class ProfileService {
     private final SafetyService safetyService;
     private final MatchingService matchingService;
     private final MatchExplanationService matchExplanationService;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
     public ProfileResponse createProfile(Long userId, ProfileRequest request, MultipartFile profileImage) {
@@ -75,6 +78,7 @@ public class ProfileService {
         // Re-fetch with photo URL set before computing completion
         UserProfile refreshed = profileRepository.findByUserIdWithDetails(userId).orElse(saved);
         updateIsCompleteFlag(refreshed);
+        eventPublisher.publishEvent(new ProfileUpdatedEvent(userId));
         return toEnrichedResponse(refreshed);
     }
 
@@ -116,6 +120,7 @@ public class ProfileService {
 
         UserProfile refreshed = profileRepository.findByUserIdWithDetails(userId).orElse(saved);
         updateIsCompleteFlag(refreshed);
+        eventPublisher.publishEvent(new ProfileUpdatedEvent(userId));
         return toEnrichedResponse(refreshed);
     }
 
@@ -217,11 +222,18 @@ public class ProfileService {
 
     @Transactional(readOnly = true)
     public Page<ProfileResponse> getRoommates(Long currentUserId, RoommateFilterRequest filter, Pageable pageable) {
+        UserProfile currentProfile = profileRepository.findByUserIdWithDetails(currentUserId).orElse(null);
+
         Specification<UserProfile> spec = (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
 
             predicates.add(cb.isTrue(root.get("isComplete")));
             predicates.add(cb.notEqual(root.get("user").get("id"), currentUserId));
+
+            // Strict same-gender filter
+            if (currentProfile != null && currentProfile.getGender() != null) {
+                predicates.add(cb.equal(root.get("gender"), currentProfile.getGender()));
+            }
 
             // Exclude blocked users (both directions)
             Set<Long> excludedIds = safetyService.getExcludedUserIds(currentUserId);

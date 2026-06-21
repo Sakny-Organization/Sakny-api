@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="021-add-property-tenant-preferences" author="sakany-team">
+        <addColumn tableName="properties">
+            <column name="pref_tenant_gender" type="VARCHAR(10)"/>
+            <column name="pref_tenant_type" type="VARCHAR(30)"/>
+            <column name="pref_smoking" type="VARCHAR(30)"/>
+            <column name="pref_pets" type="VARCHAR(30)"/>
+            <column name="pref_sleep_schedule" type="VARCHAR(20)"/>
+            <column name="pref_cleanliness" type="VARCHAR(20)"/>
+            <column name="pref_min_age" type="INTEGER"/>
+            <column name="pref_max_age" type="INTEGER"/>
+        </addColumn>
+    </changeSet>
+
+</databaseChangeLog>

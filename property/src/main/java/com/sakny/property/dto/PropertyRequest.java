@@ -1,5 +1,6 @@
 package com.sakny.property.dto;
 
+import com.sakny.common.model.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
@@ -59,4 +60,13 @@ public class PropertyRequest {
     private Boolean petsAllowed;
     private Boolean smokingAllowed;
     private String preferredTenant;
+
+    private Gender prefTenantGender;
+    private RoommateType prefTenantType;
+    private SmokingPreference prefSmoking;
+    private PetPreference prefPets;
+    private SleepSchedulePreference prefSleepSchedule;
+    private CleanlinessPreference prefCleanliness;
+    private Integer prefMinAge;
+    private Integer prefMaxAge;
 }

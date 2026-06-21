@@ -32,7 +32,9 @@ public interface PropertyMapper {
     @Mapping(target = "ownerId", source = "owner.id")
     @Mapping(target = "ownerName", source = "owner.name")
     @Mapping(target = "governorate", source = "governorate.nameEn")
+    @Mapping(target = "governorateId", source = "governorate.id")
     @Mapping(target = "city", source = "city.nameEn")
+    @Mapping(target = "cityId", source = "city.id")
     @Mapping(target = "amenities", source = "amenities")
     @Mapping(target = "images", source = "images")
     PropertyResponse toResponse(Property property);

@@ -25,5 +25,7 @@
     <include file="db/changelog/changes/017-add-performance-indexes.xml"/>
     <include file="db/changelog/changes/018-create-safety-and-notifications.xml"/>
     <include file="db/changelog/changes/019-create-user-activities.xml"/>
+    <include file="db/changelog/changes/020-add-property-status.xml"/>
+    <include file="db/changelog/changes/021-add-property-tenant-preferences.xml"/>
 
 </databaseChangeLog>

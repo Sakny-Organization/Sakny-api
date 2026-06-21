@@ -1,5 +1,6 @@
 package com.sakny.property.entity;
 
+import com.sakny.common.model.*;
 import com.sakny.user.entity.City;
 import com.sakny.user.entity.Governorate;
 import com.sakny.user.entity.User;
@@ -100,6 +101,40 @@ public class Property {
 
     @Column(name = "preferred_tenant", length = 50)
     private String preferredTenant;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "pref_tenant_gender", length = 10)
+    private Gender prefTenantGender;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "pref_tenant_type", length = 30)
+    private RoommateType prefTenantType;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "pref_smoking", length = 30)
+    private SmokingPreference prefSmoking;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "pref_pets", length = 30)
+    private PetPreference prefPets;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "pref_sleep_schedule", length = 20)
+    private SleepSchedulePreference prefSleepSchedule;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "pref_cleanliness", length = 20)
+    private CleanlinessPreference prefCleanliness;
+
+    @Column(name = "pref_min_age")
+    private Integer prefMinAge;
+
+    @Column(name = "pref_max_age")
+    private Integer prefMaxAge;
+
+    @Column(name = "status", length = 20)
+    @Builder.Default
+    private String status = "AVAILABLE";
 
     @ManyToMany
     @JoinTable(
