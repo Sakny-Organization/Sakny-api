@@ -23,6 +23,7 @@ public class MinioConfig {
         MinioClient minioClient = MinioClient.builder()
                 .endpoint(minioProperties.getUrl())
                 .credentials(minioProperties.getAccessKey(), minioProperties.getSecretKey())
+                .region("auto")
                 .build();
 
         initializeBucket(minioClient);
@@ -41,8 +42,11 @@ public class MinioConfig {
                         MakeBucketArgs.builder().bucket(bucketName).build()
                 );
                 log.info("Created MinIO bucket: {}", bucketName);
+            } else {
+                log.info("MinIO bucket already exists: {}", bucketName);
+            }
 
-                // Set bucket policy to allow public read access for profile photos
+            try {
                 String policy = """
                     {
                         "Version": "2012-10-17",
@@ -64,8 +68,8 @@ public class MinioConfig {
                                 .build()
                 );
                 log.info("Set public read policy for bucket: {}", bucketName);
-            } else {
-                log.info("MinIO bucket already exists: {}", bucketName);
+            } catch (Exception e) {
+                log.warn("Could not set bucket policy (may not be supported by provider): {}", e.getMessage());
             }
         } catch (Exception e) {
             log.error("Error initializing MinIO bucket: {}", e.getMessage(), e);

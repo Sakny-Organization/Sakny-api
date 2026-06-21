@@ -24,10 +24,10 @@ COPY message/src message/src
 RUN mvn clean package -DskipTests
 
 # Run stage
-FROM eclipse-temurin:17-jre
+FROM eclipse-temurin:17-jre-alpine
 WORKDIR /app
 COPY --from=build /app/sakny-server/target/sakny-server-*.jar app.jar
 
 EXPOSE 8081
 
-ENTRYPOINT ["java", "-jar", "app.jar"]
+ENTRYPOINT ["java", "-Xmx384m", "-Xss256k", "-XX:+UseSerialGC", "-jar", "app.jar"]
