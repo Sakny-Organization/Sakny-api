@@ -35,7 +35,7 @@ public class SecurityConfig {
     private final StringRedisTemplate redisTemplate;
     private final ObjectMapper objectMapper;
 
-    @Value("${cors.allowed-origins:http://localhost:3000,http://localhost:5173}")
+    @Value("${cors.allowed-origins:*}")
     private List<String> allowedOrigins;
 
     @Bean
@@ -91,7 +91,11 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(allowedOrigins);
+        if (allowedOrigins.contains("*")) {
+            config.setAllowedOriginPatterns(List.of("*"));
+        } else {
+            config.setAllowedOrigins(allowedOrigins);
+        }
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("Authorization", "Content-Type", "Accept"));
         config.setAllowCredentials(true);
