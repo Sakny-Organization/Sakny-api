@@ -13,6 +13,9 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Schema(description = "Response object containing authentication tokens")
 public class AuthenticationResponse {
+    @Schema(description = "The authenticated user's ID")
+    private Long userId;
+
     @Schema(description = "Short-lived JWT access token (15 minutes)", example = "eyJhbGciOiJIUzI1NiJ9...")
     private String token;
 

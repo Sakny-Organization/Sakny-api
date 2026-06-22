@@ -104,6 +104,7 @@ public class AuthService {
                 .orElse(false);
 
         return AuthenticationResponse.builder()
+                .userId(user.getId())
                 .token(jwtToken)
                 .refreshToken(refreshToken)
                 .housingRole(user.getHousingRole())
@@ -124,6 +125,7 @@ public class AuthService {
                 .orElse(false);
 
         return AuthenticationResponse.builder()
+                .userId(user.getId())
                 .token(jwtToken)
                 .refreshToken(result.newRefreshToken())
                 .housingRole(user.getHousingRole())
