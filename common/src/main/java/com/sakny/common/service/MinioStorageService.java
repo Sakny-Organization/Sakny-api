@@ -76,10 +76,10 @@ public class MinioStorageService implements StorageService {
 
     @Override
     public String getFileUrl(String objectKey) {
-        return String.format("%s/%s/%s",
-                minioProperties.getUrl(),
-                minioProperties.getBucketName(),
-                objectKey);
+        String baseUrl = minioProperties.getPublicUrl() != null && !minioProperties.getPublicUrl().isBlank()
+                ? minioProperties.getPublicUrl()
+                : minioProperties.getUrl() + "/" + minioProperties.getBucketName();
+        return String.format("%s/%s", baseUrl, objectKey);
     }
 
     @Override

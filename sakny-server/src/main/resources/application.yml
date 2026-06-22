@@ -92,6 +92,7 @@ minio:
   access-key: ${MINIO_ACCESS_KEY:minioadmin}
   secret-key: ${MINIO_SECRET_KEY:minioadmin123}
   bucket-name: ${MINIO_BUCKET_NAME:sakny-profiles}
+  public-url: ${MINIO_PUBLIC_URL:}
 
 # Shufti Pro KYC Configuration
 shuftipro:
