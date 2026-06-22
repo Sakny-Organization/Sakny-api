@@ -30,4 +30,4 @@ COPY --from=build /app/sakny-server/target/sakny-server-*.jar app.jar
 
 EXPOSE 8081
 
-ENTRYPOINT ["java", "-Xmx384m", "-Xss256k", "-XX:+UseSerialGC", "-jar", "app.jar"]
+CMD java -Xmx384m -Xss256k -XX:+UseSerialGC -Dserver.port=${PORT:-8081} -jar app.jar
