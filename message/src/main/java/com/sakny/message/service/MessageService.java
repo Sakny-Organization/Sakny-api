@@ -10,6 +10,8 @@ import com.sakny.message.mapper.MessageMapper;
 import com.sakny.message.repository.ConversationRepository;
 import com.sakny.message.repository.MessageRepository;
 import com.sakny.user.entity.User;
+import com.sakny.user.entity.UserProfile;
+import com.sakny.user.repository.UserProfileRepository;
 import com.sakny.user.repository.UserRepository;
 import com.sakny.user.service.SafetyService;
 import jakarta.persistence.EntityNotFoundException;
@@ -33,6 +35,7 @@ public class MessageService {
     private final ConversationRepository conversationRepository;
     private final MessageRepository      messageRepository;
     private final UserRepository         userRepository;
+    private final UserProfileRepository  userProfileRepository;
     private final MessageMapper          messageMapper;
     private final SimpMessagingTemplate  messagingTemplate;
     private final SafetyService          safetyService;
@@ -213,10 +216,15 @@ public class MessageService {
         var lastMsgOpt = messageRepository.findLatestByConversationId(conv.getId());
         long unread    = messageRepository.countUnreadByConversationIdAndReceiverId(conv.getId(), currentUserId);
 
+        String photoUrl = userProfileRepository.findByUserId(other.getId())
+            .map(UserProfile::getProfilePhotoUrl)
+            .orElse(null);
+
         return ConversationResponse.builder()
             .conversationId(conv.getId())
             .otherUserId(other.getId())
             .otherUserName(other.getName())
+            .otherUserPhoto(photoUrl)
             .lastMessageContent(lastMsgOpt.map(Message::getContent).orElse(null))
             .lastMessageSentAt(lastMsgOpt.map(Message::getSentAt).orElse(null))
             .unreadCount(unread)

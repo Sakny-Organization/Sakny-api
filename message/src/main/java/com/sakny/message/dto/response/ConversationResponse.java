@@ -14,6 +14,7 @@ public class ConversationResponse {
     /** The other participant (not the currently authenticated user). */
     private Long otherUserId;
     private String otherUserName;
+    private String otherUserPhoto;
 
     /** Snippet shown in the conversation list. */
     private String lastMessageContent;
