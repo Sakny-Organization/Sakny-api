@@ -146,6 +146,22 @@ public class MessageService {
                 .build()
         );
 
+        // 3. Push a notification to the receiver
+        messagingTemplate.convertAndSendToUser(
+            String.valueOf(receiver.getId()),
+            "/queue/notifications",
+            java.util.Map.of(
+                "type", "NEW_MESSAGE",
+                "title", "New message from " + sender.getName(),
+                "body", request.getContent().length() > 50
+                    ? request.getContent().substring(0, 50) + "..."
+                    : request.getContent(),
+                "senderId", sender.getId(),
+                "senderName", sender.getName(),
+                "conversationId", conversation.getId()
+            )
+        );
+
         log.debug("Message {} sent from user {} to user {} in conversation {}",
             message.getId(), senderId, receiver.getId(), conversation.getId());
 
