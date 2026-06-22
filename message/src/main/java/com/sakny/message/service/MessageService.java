@@ -13,6 +13,7 @@ import com.sakny.user.entity.User;
 import com.sakny.user.entity.UserProfile;
 import com.sakny.user.repository.UserProfileRepository;
 import com.sakny.user.repository.UserRepository;
+import com.sakny.user.service.NotificationService;
 import com.sakny.user.service.SafetyService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -39,6 +40,7 @@ public class MessageService {
     private final MessageMapper          messageMapper;
     private final SimpMessagingTemplate  messagingTemplate;
     private final SafetyService          safetyService;
+    private final NotificationService    notificationService;
 
     // ------------------------------------------------------------------ //
     //  Conversation list
@@ -146,16 +148,23 @@ public class MessageService {
                 .build()
         );
 
-        // 3. Push a notification to the receiver
+        // 3. Persist and push a notification to the receiver
+        String notifTitle = "New message from " + sender.getName();
+        String notifBody = request.getContent().length() > 50
+            ? request.getContent().substring(0, 50) + "..."
+            : request.getContent();
+
+        notificationService.createNotification(
+            receiver.getId(), "NEW_MESSAGE", notifTitle, notifBody, sender.getId()
+        );
+
         messagingTemplate.convertAndSendToUser(
             String.valueOf(receiver.getId()),
             "/queue/notifications",
             java.util.Map.of(
                 "type", "NEW_MESSAGE",
-                "title", "New message from " + sender.getName(),
-                "body", request.getContent().length() > 50
-                    ? request.getContent().substring(0, 50) + "..."
-                    : request.getContent(),
+                "title", notifTitle,
+                "body", notifBody,
                 "senderId", sender.getId(),
                 "senderName", sender.getName(),
                 "conversationId", conversation.getId()
