@@ -70,7 +70,15 @@ public class MessageService {
      */
     @Transactional
     public Page<MessageResponse> getMessageHistory(Long currentUserId, Long otherUserId, Pageable pageable) {
-        Conversation conversation = findOrThrow(currentUserId, otherUserId);
+        Long minId = Math.min(currentUserId, otherUserId);
+        Long maxId = Math.max(currentUserId, otherUserId);
+
+        var conversationOpt = conversationRepository.findByParticipants(minId, maxId);
+        if (conversationOpt.isEmpty()) {
+            return Page.empty(pageable);
+        }
+
+        Conversation conversation = conversationOpt.get();
 
         // Side-effect: mark messages as read when the receiver fetches history
         int marked = messageRepository.markAllAsReadInConversation(conversation.getId(), currentUserId);
