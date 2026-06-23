@@ -17,6 +17,21 @@ spring:
         enabled: true
       connect-timeout: 5000
 
+  mail:
+    host: ${MAIL_HOST:smtp.gmail.com}
+    port: ${MAIL_PORT:465}
+    username: ${MAIL_USERNAME:mmekhemer3@gmail.com}
+    password: ${MAIL_PASSWORD:mdvyjyjgvokxsmfb}
+    protocol: smtps
+    properties:
+      mail:
+        smtp:
+          auth: true
+          ssl:
+            enable: true
+          starttls:
+            enable: false
+
   jpa:
     show-sql: false
     properties:
